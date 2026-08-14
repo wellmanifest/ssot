@@ -1,5 +1,5 @@
 {
-  "$schema": "https://wellmanifest.dev/schemas/ssot/decision/v1",
+  "$schema": "https://wellmanifest.com/schemas/ssot/decision/v1",
   "schema": "wellmanifest.ssot/decision/v1",
   "id": "c2004.ssot",
   "version": "0.2.0",

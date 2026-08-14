@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://wellmanifest.dev/schemas/ssot/decision/v1",
+  "$id": "https://wellmanifest.com/schemas/ssot/decision/v1",
   "title": "Wellmanifest SSOT decision document v1",
   "description": "Canonical SSOT classification and proposed next actions. Propose-only: the document never authorizes edits, deletes, or merges.",
   "type": "object",

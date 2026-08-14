@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://wellmanifest.dev/schemas/ssot/interview/v1",
+  "$id": "https://wellmanifest.com/schemas/ssot/interview/v1",
   "title": "Wellmanifest SSOT interview answers v1",
   "description": "Typed answers to the SSOT questionnaire. Natural language belongs only in declared text fields. Validity never authorizes edits.",
   "type": "object",
