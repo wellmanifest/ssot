@@ -1,0 +1,118 @@
+{
+  "$schema": "https://wellmanifest.dev/schemas/ssot/decision/v1",
+  "schema": "wellmanifest.ssot/decision/v1",
+  "id": "c2004.ssot",
+  "version": "0.1.0",
+  "purpose": "Reusable SSOT decisions distilled from the c2004 vs oqlos dual-checkout and frontend-services parity review. Method, not c2004-specific code.",
+  "context": {
+    "subject": "c2004.ssot",
+    "languages": ["python", "javascript", "typescript"],
+    "packaging": ["git-submodule", "npm", "vendored-copy", "facade-reexport"],
+    "analyzer": {
+      "present": true,
+      "kind": "code2llm-toon",
+      "treatAsDebtUntilInterview": false
+    }
+  },
+  "policy": {
+    "kind": "pin_policy",
+    "edit": "upstream",
+    "onChange": "bump_pin",
+    "forbid": [
+      "delete_generated_mirror",
+      "treat_analyzer_as_debt",
+      "couple_standalone_to_foreign_monorepo",
+      "fork_logic_into_consumer"
+    ]
+  },
+  "decisions": [
+    {
+      "id": "c2004.backend-shared-py",
+      "kind": "generated_mirror",
+      "canonical": {
+        "ref": "github:oqlos/backend-shared-py",
+        "path": "packages/backend-shared-py"
+      },
+      "trees": [
+        "packages/backend-shared-py",
+        "extern/oqlos/packages/backend-shared-py"
+      ],
+      "rationale": "Dual git-submodule checkouts of the same package are generated deployment mirrors, not forks. redup/code2llm will report exact copies; that is expected. Edit upstream backend-shared-py and bump the pin. Do not delete either tree without redesigning oqlos packaging.",
+      "actions": [
+        { "do": "edit_upstream", "target": "github:oqlos/backend-shared-py" },
+        { "do": "bump_pin", "target": "c2004" },
+        { "do": "keep_both_checkouts" }
+      ],
+      "forbid": ["delete_either_tree", "delete_generated_mirror"]
+    },
+    {
+      "id": "c2004.frontend-services-parity",
+      "kind": "vendored_copy",
+      "canonical": {
+        "ref": "packages/frontend-services",
+        "path": "packages/frontend-services"
+      },
+      "trees": [
+        "packages/frontend-services/src/wsClient.js",
+        "extern/oqlos/frontend/src/api/wsClient.js",
+        "packages/frontend-services/src/designRem.js",
+        "extern/oqlos/frontend/src/utils/designRem.js",
+        "packages/frontend-services/src/hardware-api-retry.js",
+        "extern/oqlos/frontend/src/api/hardware-api-retry.js",
+        "packages/hardware-client-ts/src/index.ts",
+        "extern/oqlos/frontend/vendor/hardware-client/index.ts"
+      ],
+      "gate": {
+        "kind": "parity_test",
+        "path": "tests/test_frontend_services_oqlos_parity.py"
+      },
+      "rationale": "extern/oqlos cannot import across the repository boundary, so it carries vendored copies. Identical pairs must stay byte-identical. A standalone product must vendor and gate drift instead of coupling to another monorepo just to import SSOT.",
+      "actions": [
+        { "do": "keep_parity_test", "target": "tests/test_frontend_services_oqlos_parity.py" },
+        { "do": "vendor_and_gate_drift" }
+      ],
+      "forbid": ["couple_standalone_to_foreign_monorepo"]
+    },
+    {
+      "id": "c2004.parent-url-bridge",
+      "kind": "allowed_divergence",
+      "canonical": {
+        "ref": "packages/frontend-services/src/parentUrlBridge.js",
+        "path": "packages/frontend-services/src/parentUrlBridge.js"
+      },
+      "trees": [
+        "packages/frontend-services/src/parentUrlBridge.js",
+        "extern/oqlos/frontend/src/utils/parentUrlBridge.js"
+      ],
+      "knownDivergent": {
+        "reason": "Different postMessage protocols by design; each copy has its own host listener. Sharing one message type would cross-talk."
+      },
+      "rationale": "jscpd reports clones; the remaining review work is actionable twins versus allowed-divergent copies. parentUrlBridge is the latter.",
+      "actions": [
+        { "do": "document_known_divergent" }
+      ],
+      "forbid": []
+    },
+    {
+      "id": "c2004.hardware-client-facade",
+      "kind": "facade",
+      "canonical": {
+        "ref": "oqlos.hardware.client",
+        "module": "oqlos.hardware.client"
+      },
+      "trees": [
+        "packages/hardware-client-py",
+        "oqlos/oqlos/hardware/client"
+      ],
+      "facade": {
+        "path": "packages/hardware-client-py"
+      },
+      "rationale": "The hardware client facade re-exports the canonical oqlos.hardware.client implementation. Do not copy tic249_* or other client logic into the consumer.",
+      "actions": [
+        { "do": "keep_facade_reexport_canonical", "target": "oqlos.hardware.client" }
+      ],
+      "forbid": ["fork_logic_into_consumer"]
+    }
+  ],
+  "questions": []
+}

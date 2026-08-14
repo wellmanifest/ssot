@@ -1,0 +1,22 @@
+{
+  "schema": "wellmanifest.ssot/interview/v1",
+  "subject_id": "c2004.backend-shared-py",
+  "purpose": "Classify the dual backend-shared-py checkout reported as an exact clone.",
+  "languages": ["python"],
+  "packaging": ["git-submodule"],
+  "trees": [
+    "packages/backend-shared-py",
+    "extern/oqlos/packages/backend-shared-py"
+  ],
+  "same_git_remote": true,
+  "same_pin": true,
+  "relationship": "generated_mirror",
+  "must_stay_identical": "identical",
+  "different_protocol_by_design": false,
+  "canonical_ref": "github:oqlos/backend-shared-py",
+  "consumer_can_import": true,
+  "analyzer_present": true,
+  "analyzer_kind": "code2llm-toon",
+  "analyzer_noise": true,
+  "human_confirmed_debt": false
+}

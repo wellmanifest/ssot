@@ -1,0 +1,19 @@
+{
+  "schema": "wellmanifest.ssot/interview/v1",
+  "subject_id": "example.analyzer-noise",
+  "purpose": "A code2llm TOON report flagged a constants module as high CC.",
+  "languages": ["python"],
+  "packaging": ["unknown"],
+  "trees": ["docs/ARCHITECTURE.md", "project/analysis.toon.yaml"],
+  "same_git_remote": false,
+  "same_pin": "unknown",
+  "relationship": "unknown",
+  "must_stay_identical": "unknown",
+  "different_protocol_by_design": false,
+  "canonical_ref": "unknown",
+  "consumer_can_import": true,
+  "analyzer_present": true,
+  "analyzer_kind": "code2llm-toon",
+  "analyzer_noise": true,
+  "human_confirmed_debt": false
+}

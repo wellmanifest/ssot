@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wellmanifest.dev/schemas/ssot/interview/v1",
+  "title": "Wellmanifest SSOT interview answers v1",
+  "description": "Typed answers to the SSOT questionnaire. Natural language belongs only in declared text fields. Validity never authorizes edits.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "subject_id",
+    "purpose",
+    "languages",
+    "packaging",
+    "trees",
+    "same_git_remote",
+    "same_pin",
+    "relationship",
+    "must_stay_identical",
+    "different_protocol_by_design",
+    "canonical_ref",
+    "consumer_can_import",
+    "analyzer_present",
+    "analyzer_kind",
+    "analyzer_noise",
+    "human_confirmed_debt"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "format": "uri" },
+    "schema": { "const": "wellmanifest.ssot/interview/v1" },
+    "subject_id": { "$ref": "#/$defs/identifier" },
+    "purpose": { "type": "string", "minLength": 1, "maxLength": 400 },
+    "languages": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 40 }
+    },
+    "packaging": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "git-submodule",
+          "npm",
+          "pip",
+          "vendored-copy",
+          "monorepo-path",
+          "facade-reexport",
+          "unknown"
+        ]
+      }
+    },
+    "trees": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/relativePath" }
+    },
+    "same_git_remote": { "type": "boolean" },
+    "same_pin": { "enum": [true, false, "unknown"] },
+    "relationship": {
+      "enum": [
+        "generated_mirror",
+        "vendored_copy",
+        "facade",
+        "allowed_divergence",
+        "real_fork",
+        "unknown"
+      ]
+    },
+    "must_stay_identical": { "enum": ["identical", "may_drift", "unknown"] },
+    "different_protocol_by_design": { "type": "boolean" },
+    "divergence_reason": { "type": "string", "maxLength": 400 },
+    "canonical_ref": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "facade_path": { "type": "string", "maxLength": 300 },
+    "consumer_can_import": { "type": "boolean" },
+    "analyzer_present": { "type": "boolean" },
+    "analyzer_kind": {
+      "enum": ["code2llm-toon", "redup", "jscpd", "other", "none"]
+    },
+    "analyzer_noise": { "type": "boolean" },
+    "human_confirmed_debt": { "type": "boolean" },
+    "gate_path": { "type": "string", "maxLength": 300 }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    }
+  }
+}

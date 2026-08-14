@@ -1,0 +1,35 @@
+{
+  "schema": "wellmanifest.ssot/decision/v1",
+  "id": "invalid.missing-reason",
+  "version": "0.1.0",
+  "context": {
+    "subject": "invalid.missing-reason",
+    "languages": ["javascript"],
+    "packaging": ["vendored-copy"],
+    "analyzer": {
+      "present": false,
+      "kind": "none",
+      "treatAsDebtUntilInterview": false
+    }
+  },
+  "policy": {
+    "kind": "pin_policy",
+    "edit": "upstream",
+    "onChange": "re_vendor",
+    "forbid": [
+      "delete_generated_mirror",
+      "couple_standalone_to_foreign_monorepo"
+    ]
+  },
+  "decisions": [
+    {
+      "id": "invalid.pair",
+      "kind": "allowed_divergence",
+      "canonical": { "ref": "pkg/a.js" },
+      "trees": ["pkg/a.js", "vendor/a.js"],
+      "actions": [{ "do": "document_known_divergent" }],
+      "forbid": []
+    }
+  ],
+  "questions": []
+}

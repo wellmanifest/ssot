@@ -1,0 +1,23 @@
+{
+  "schema": "wellmanifest.ssot/interview/v1",
+  "subject_id": "c2004.hardware-client",
+  "purpose": "Keep the hardware client as a facade over oqlos.hardware.client.",
+  "languages": ["python"],
+  "packaging": ["facade-reexport", "pip"],
+  "trees": [
+    "packages/hardware-client-py",
+    "oqlos/oqlos/hardware/client"
+  ],
+  "same_git_remote": false,
+  "same_pin": "unknown",
+  "relationship": "facade",
+  "must_stay_identical": "may_drift",
+  "different_protocol_by_design": false,
+  "canonical_ref": "oqlos.hardware.client",
+  "facade_path": "packages/hardware-client-py",
+  "consumer_can_import": true,
+  "analyzer_present": false,
+  "analyzer_kind": "none",
+  "analyzer_noise": false,
+  "human_confirmed_debt": false
+}

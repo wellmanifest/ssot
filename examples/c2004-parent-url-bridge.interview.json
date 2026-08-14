@@ -1,0 +1,23 @@
+{
+  "schema": "wellmanifest.ssot/interview/v1",
+  "subject_id": "c2004.parent-url-bridge",
+  "purpose": "Document why the two parentUrlBridge copies must keep different postMessage protocols.",
+  "languages": ["javascript"],
+  "packaging": ["vendored-copy"],
+  "trees": [
+    "packages/frontend-services/src/parentUrlBridge.js",
+    "extern/oqlos/frontend/src/utils/parentUrlBridge.js"
+  ],
+  "same_git_remote": false,
+  "same_pin": false,
+  "relationship": "allowed_divergence",
+  "must_stay_identical": "may_drift",
+  "different_protocol_by_design": true,
+  "divergence_reason": "Different postMessage protocols by design; each copy has its own host listener.",
+  "canonical_ref": "packages/frontend-services/src/parentUrlBridge.js",
+  "consumer_can_import": false,
+  "analyzer_present": true,
+  "analyzer_kind": "jscpd",
+  "analyzer_noise": false,
+  "human_confirmed_debt": true
+}

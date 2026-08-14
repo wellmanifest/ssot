@@ -1,0 +1,141 @@
+{
+  "schema": "wellmanifest.ssot/interview/v1",
+  "id": "wellmanifest.ssot.interview",
+  "version": "0.1.0",
+  "purpose": "Classify duplication before treating analyzer output as debt.",
+  "questions": [
+    {
+      "id": "subject_id",
+      "prompt": "What should we call this SSOT context? (stable id, e.g. c2004 or my-service)",
+      "type": "identifier",
+      "required": true
+    },
+    {
+      "id": "purpose",
+      "prompt": "One sentence: what reuse problem are you trying to settle?",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "languages",
+      "prompt": "Which languages are in play? (comma-separated: python, javascript, typescript, go, rust, other)",
+      "type": "string-list",
+      "required": true
+    },
+    {
+      "id": "packaging",
+      "prompt": "How is the shared code packaged today? (comma-separated: git-submodule, npm, pip, vendored-copy, monorepo-path, facade-reexport, unknown)",
+      "type": "enum-list",
+      "choices": [
+        "git-submodule",
+        "npm",
+        "pip",
+        "vendored-copy",
+        "monorepo-path",
+        "facade-reexport",
+        "unknown"
+      ],
+      "required": true
+    },
+    {
+      "id": "trees",
+      "prompt": "List the trees or files that look like copies (comma-separated repository-relative paths).",
+      "type": "path-list",
+      "required": true
+    },
+    {
+      "id": "same_git_remote",
+      "prompt": "Do those trees share the same git remote (same upstream package, checked out twice)?",
+      "type": "bool",
+      "required": true
+    },
+    {
+      "id": "same_pin",
+      "prompt": "If they are git checkouts, are they pinned to the same commit?",
+      "type": "bool-or-unknown",
+      "required": true
+    },
+    {
+      "id": "relationship",
+      "prompt": "What is the intended relationship?",
+      "type": "enum",
+      "choices": [
+        "generated_mirror",
+        "vendored_copy",
+        "facade",
+        "allowed_divergence",
+        "real_fork",
+        "unknown"
+      ],
+      "required": true
+    },
+    {
+      "id": "must_stay_identical",
+      "prompt": "Must the copies stay byte-identical (parity-gated), or may they drift?",
+      "type": "enum",
+      "choices": ["identical", "may_drift", "unknown"],
+      "required": true
+    },
+    {
+      "id": "different_protocol_by_design",
+      "prompt": "Do the copies implement different protocols or APIs on purpose?",
+      "type": "bool",
+      "required": true
+    },
+    {
+      "id": "divergence_reason",
+      "prompt": "If they may diverge, what is the documented KNOWN_DIVERGENT reason? (empty if identical)",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "canonical_ref",
+      "prompt": "What is the canonical owner? (git remote, package name, or module path)",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "facade_path",
+      "prompt": "If a facade re-exports the canonical module, what is the facade path? (empty if none)",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "consumer_can_import",
+      "prompt": "Can every consumer import the SSOT package without coupling a standalone product to another monorepo?",
+      "type": "bool",
+      "required": true
+    },
+    {
+      "id": "analyzer_present",
+      "prompt": "Is there a duplication or complexity analyzer report (code2llm TOON, redup, jscpd)?",
+      "type": "bool",
+      "required": true
+    },
+    {
+      "id": "analyzer_kind",
+      "prompt": "If yes, which analyzer? (code2llm-toon, redup, jscpd, other, none)",
+      "type": "enum",
+      "choices": ["code2llm-toon", "redup", "jscpd", "other", "none"],
+      "required": true
+    },
+    {
+      "id": "analyzer_noise",
+      "prompt": "Does the report look noisy? (CC on constants, docs as god modules, generated proto, minified assets, same-file fuzzy matches)",
+      "type": "bool",
+      "required": true
+    },
+    {
+      "id": "human_confirmed_debt",
+      "prompt": "Has a human confirmed this pair is real debt, not analyzer noise or a generated mirror?",
+      "type": "bool",
+      "required": true
+    },
+    {
+      "id": "gate_path",
+      "prompt": "Existing parity or pin test path, if any (empty if none).",
+      "type": "text",
+      "required": false
+    }
+  ]
+}

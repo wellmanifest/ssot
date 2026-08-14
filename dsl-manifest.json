@@ -1,0 +1,229 @@
+{
+  "$schema": "https://wellmanifest.dev/schemas/dsl-manifest/v1",
+  "schema": "wellmanifest.dsl/manifest/v1",
+  "id": "wellmanifest.ssot",
+  "name": "Wellmanifest SSOT decision DSL",
+  "version": "0.1.0-dev",
+  "status": "experimental",
+  "purpose": "Interview-driven classification of duplicated trees into propose-only SSOT decisions",
+  "domain": "software-ssot",
+  "owners": [
+    {
+      "kind": "repository",
+      "id": "github:wellmanifest/ssot",
+      "responsibilities": ["semantics", "validation", "compatibility"]
+    }
+  ],
+  "source": {
+    "repository": "https://github.com/wellmanifest/ssot",
+    "path": "schemas/ssot-decision.schema.json",
+    "declaredVersion": "1",
+    "canonical": "json-ast",
+    "mediaType": "application/schema+json",
+    "selectors": []
+  },
+  "ownedPaths": [
+    "dsl-manifest.json",
+    "schemas/**",
+    "questions/**",
+    "docs/**",
+    "src/ssot.py",
+    "examples/**"
+  ],
+  "artifacts": [
+    {
+      "path": "schemas/ssot-decision.schema.json",
+      "role": "normative-source",
+      "digest": "sha256:ccd89c830ea2e8bb70c3e590bce7c7b6f7c03523bf78a1c0a82c0b3cfa7dcc5e"
+    },
+    {
+      "path": "schemas/ssot-interview.schema.json",
+      "role": "schema",
+      "digest": "sha256:ec3478bafbfa41149b46fa4d5653657be8f2cab998e68838002167508901b6e4"
+    },
+    {
+      "path": "questions/interview.json",
+      "role": "profile",
+      "digest": "sha256:54a612a82dac3c75da02433f3b224c570b75f116a18a22ffd0bea0f1e8ca89fb"
+    },
+    {
+      "path": "src/ssot.py",
+      "role": "parser-contract",
+      "digest": "sha256:880550e61a1322e4020005195b86eb7de21d6b28a2d036d4727ce13fbed091ff"
+    },
+    {
+      "path": "docs/SSOT.md",
+      "role": "documentation",
+      "digest": "sha256:fa26977651e11f9cff99342c671cea6e7dd815dda0acfa4a9a09f16e7a3a9065"
+    },
+    {
+      "path": "docs/INTERVIEW.md",
+      "role": "documentation",
+      "digest": "sha256:dc94ff836745046e4f4fcbbbe78a4952ce415d6672ff64ba4468dfef3a4dc849"
+    },
+    {
+      "path": "docs/CLASSIFY.md",
+      "role": "documentation",
+      "digest": "sha256:96edc8983088e73fa78c10f7fb86f42f8da2a769d81656485d7691535bfe4d2f"
+    },
+    {
+      "path": "docs/SUGGEST.md",
+      "role": "documentation",
+      "digest": "sha256:e62d34a02140334084314bcceb0055be9ba3e4d7db6313915f9c991f528a24ed"
+    },
+    {
+      "path": "docs/VALIDATE.md",
+      "role": "documentation",
+      "digest": "sha256:3d9218e5fb7d38a4988d50d03b81feaf245879eef9b3c36243b9fb1d348440c6"
+    },
+    {
+      "path": "docs/ERROR/SSOT-KIND-001.md",
+      "role": "documentation",
+      "digest": "sha256:9ccef6e9a5f297a095c428fe2541ef619f57fabf7b178c305d0f3171714036a1"
+    },
+    {
+      "path": "docs/ERROR/SSOT-NOISE-001.md",
+      "role": "documentation",
+      "digest": "sha256:45a10d3fad41cb6267f894dff03110edfd9a4fddd3aca296c95aa81f4f801c2f"
+    },
+    {
+      "path": "docs/ERROR/SSOT-PIN-001.md",
+      "role": "documentation",
+      "digest": "sha256:417d0f095684906e19b5d35cd572e99aabce133d609c96bf5c10f15489c9ae37"
+    },
+    {
+      "path": "docs/ERROR/SSOT-REASON-001.md",
+      "role": "documentation",
+      "digest": "sha256:cb56488ecb63299dc3424859d1d89a1e1a6ad37fdbb9597f2fcb80b99ad1e291"
+    },
+    {
+      "path": "docs/ERROR/SSOT-TREE-001.md",
+      "role": "documentation",
+      "digest": "sha256:2194448b508f5ab9ecc8d8767f27dcc4330825adce084b9a64bf0192f8466af4"
+    },
+    {
+      "path": "docs/CRITICAL/SSOT-COUPLE-001.md",
+      "role": "documentation",
+      "digest": "sha256:56c9a212357e28b7f291276743674561d315e1bf865ddb47203e05db5ef2a12f"
+    },
+    {
+      "path": "examples/c2004.ssot.json",
+      "role": "example",
+      "digest": "sha256:bb2eef11e1bc826eaea5198ff5d67b52a488f9ea67c11175adddf74cca07c837"
+    },
+    {
+      "path": "examples/c2004.ssot.dsl",
+      "role": "example",
+      "digest": "sha256:61e7a18537885f9657cbcdb61f0ac813244cc0c8919d77a438d97db0bd1fd3e8"
+    }
+  ],
+  "namespaces": [
+    {
+      "prefix": "wellmanifest",
+      "uri": "https://wellmanifest.dev/"
+    },
+    {
+      "prefix": "ssot",
+      "uri": "https://wellmanifest.dev/ssot/"
+    }
+  ],
+  "projections": [
+    {
+      "name": "document-ssot-text",
+      "mediaType": "text/plain",
+      "direction": "bidirectional",
+      "lossless": true
+    }
+  ],
+  "lifecycle": {
+    "compatibility": "semver",
+    "stability": "experimental",
+    "breaking": "major",
+    "additive": "minor",
+    "fix": "patch"
+  },
+  "semantics": {
+    "effectModel": "propose-only",
+    "unknownPolicy": "reject",
+    "authoritySchema": null
+  },
+  "llm": {
+    "mode": "none",
+    "requestSchemas": [],
+    "responseSchemas": [],
+    "naturalLanguage": "typed-source-only",
+    "sourceSchema": "wellmanifest.ssot/interview/v1",
+    "modelAuthority": "none",
+    "strict": true
+  },
+  "documentation": {
+    "vocabularyKind": "commands",
+    "commandRoot": "docs",
+    "errorRoot": "docs/ERROR",
+    "criticalRoot": "docs/CRITICAL",
+    "commands": ["SSOT", "INTERVIEW", "CLASSIFY", "SUGGEST", "VALIDATE"],
+    "errorCodes": [
+      "SSOT-KIND-001",
+      "SSOT-NOISE-001",
+      "SSOT-PIN-001",
+      "SSOT-REASON-001",
+      "SSOT-TREE-001"
+    ],
+    "criticalCodes": ["SSOT-COUPLE-001"]
+  },
+  "findingPolicy": {
+    "schema": "wellmanifest.dsl/findings/v1",
+    "requiredProducers": ["wellmanifest.ssot.validator"],
+    "securityProducers": ["wellmanifest.ssot.validator"],
+    "blockingSeverities": ["critical"],
+    "requireEvaluable": true,
+    "blockUnresolvedSecurity": true
+  },
+  "publicationPolicy": {
+    "declaredTier": "review",
+    "deterministic": true,
+    "independentReview": true,
+    "externalAuthority": false,
+    "runtimeIsolation": false
+  },
+  "conformance": {
+    "levels": ["manifest", "contract", "runtime"],
+    "commands": [
+      "PYTHONPATH=src python3 -m ssot validate examples/c2004.ssot.json",
+      "PYTHONPATH=src python3 -m unittest discover -s tests"
+    ],
+    "validExamples": ["examples/c2004.ssot.json"],
+    "invalidExamples": ["examples/invalid/missing-reason.ssot.json"]
+  },
+  "mappings": [
+    {
+      "standard": "wellmanifest.dsl",
+      "version": "0.1.0-dev",
+      "relation": "implements",
+      "uri": "https://github.com/wellmanifest/dsl"
+    },
+    {
+      "standard": "wellmanifest.modularity",
+      "version": "0.1.0-dev",
+      "relation": "compatible-with",
+      "uri": "https://github.com/wellmanifest/modularity"
+    }
+  ],
+  "standardsLock": {
+    "schema": "wellmanifest.standards-lock/v1",
+    "entries": [
+      {
+        "standard": "wellmanifest.dsl",
+        "version": "0.1.0-dev",
+        "repository": "https://github.com/wellmanifest/dsl",
+        "revision": "b7d0595c95e5abbb48ebfdbdae0bc6d43c6f82f4",
+        "contracts": [
+          {
+            "ref": "schema://wellmanifest.dev/dsl/manifest/v1",
+            "digest": "sha256:34d356b76bbd483372df84bb986e15bb84e9c1f8b11b7dc9e3a6c7276c85ed13"
+          }
+        ]
+      }
+    ]
+  }
+}

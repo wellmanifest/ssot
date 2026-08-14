@@ -1,0 +1,23 @@
+{
+  "schema": "wellmanifest.ssot/interview/v1",
+  "subject_id": "c2004.frontend-services",
+  "purpose": "Keep vendored OqlOS frontend helpers identical to the SSOT package.",
+  "languages": ["javascript", "typescript"],
+  "packaging": ["vendored-copy", "npm"],
+  "trees": [
+    "packages/frontend-services/src/wsClient.js",
+    "extern/oqlos/frontend/src/api/wsClient.js"
+  ],
+  "same_git_remote": false,
+  "same_pin": false,
+  "relationship": "vendored_copy",
+  "must_stay_identical": "identical",
+  "different_protocol_by_design": false,
+  "canonical_ref": "packages/frontend-services",
+  "consumer_can_import": false,
+  "analyzer_present": true,
+  "analyzer_kind": "jscpd",
+  "analyzer_noise": false,
+  "human_confirmed_debt": true,
+  "gate_path": "tests/test_frontend_services_oqlos_parity.py"
+}
