@@ -66,6 +66,11 @@
         "facade",
         "allowed_divergence",
         "real_fork",
+        "query_namespace",
+        "served_artifact",
+        "inventory_vs_runtime",
+        "capability_surface",
+        "locale_catalog",
         "unknown"
       ]
     },

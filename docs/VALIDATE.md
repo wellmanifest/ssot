@@ -30,6 +30,11 @@ A JSON or text SSOT document.
 | `SSOT-REASON-001` | allowed divergence without reason or question |
 | `SSOT-TREE-001` | missing or unsafe tree paths |
 | `SSOT-COUPLE-001` | policy allows coupling to a foreign monorepo |
+| `SSOT-QUERY-001` | query namespace missing scope or leak forbid |
+| `SSOT-SERVE-001` | served artifact missing rebuild or source-as-served forbid |
+| `SSOT-FLEET-001` | inventory vs runtime missing dirty-tree or scan forbids |
+| `SSOT-POA-001` | capability surface missing operator/admin split |
+| `SSOT-I18N-001` | locale catalog missing catalog action or hardcode forbid |
 
 ## Examples
 

@@ -1,0 +1,22 @@
+{
+  "schema": "wellmanifest.ssot/interview/v1",
+  "subject_id": "c2004.inventory-vs-runtime",
+  "purpose": "Separate LAN discovery, connected agents, and applied git revision.",
+  "languages": ["python"],
+  "packaging": ["monorepo-path"],
+  "trees": [
+    "update/fleet_proxy/discovery.py",
+    "update/fleet_proxy"
+  ],
+  "same_git_remote": false,
+  "same_pin": false,
+  "relationship": "inventory_vs_runtime",
+  "must_stay_identical": "may_drift",
+  "different_protocol_by_design": false,
+  "canonical_ref": "update/fleet_proxy",
+  "consumer_can_import": false,
+  "analyzer_present": false,
+  "analyzer_kind": "none",
+  "analyzer_noise": false,
+  "human_confirmed_debt": true
+}

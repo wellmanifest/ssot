@@ -28,6 +28,11 @@ One decision document. Kinds:
 | Vendored and must stay identical | `vendored_copy` | parity test; vendor + gate if import would couple repos |
 | Different protocol by design | `allowed_divergence` | document `KNOWN_DIVERGENT` reason |
 | Independent evolution | `real_fork` | choose a canonical owner |
+| Stated query/URI key ownership | `query_namespace` | scope keys; forbid cross-module leak |
+| Stated source vs served dist | `served_artifact` | rebuild served artifact; do not treat source as live |
+| Stated discovery vs agent vs pin | `inventory_vs_runtime` | do not count scan as connected; refuse dirty overwrite |
+| Stated chrome vs grant | `capability_surface` | test operator and admin separately |
+| Stated UI copy ownership | `locale_catalog` | use locale catalog; forbid hardcoded copy |
 | Analyzer noise, relationship unknown | `same_file_noise` | ask questions; do not treat as debt |
 
 Document-level `POLICY pin` is always emitted.
@@ -41,3 +46,7 @@ Interview schema or path errors: `SSOT-KIND-001`, `SSOT-TREE-001`.
 `examples/c2004-frontend-services.interview.json` classifies as
 `vendored_copy` with `vendor_and_gate_drift` because the consumer cannot
 import the SSOT package.
+
+Stated `query_namespace`, `served_artifact`, `inventory_vs_runtime`,
+`capability_surface`, and `locale_catalog` win over an inferred
+`generated_mirror`.

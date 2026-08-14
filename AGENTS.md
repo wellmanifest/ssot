@@ -31,6 +31,16 @@ PYTHONPATH=src python3 -m ssot validate <decision.json>
   thin import; do not copy business logic.
 - Analyzer noise (CC on constants, docs as god modules, generated proto,
   same-file fuzzy matches) → `same_file_noise` and questions.
+- Hardware or shell query keys on a foreign module → `query_namespace`.
+  **Do not leak COMMAND/ADDRESS across pages.**
+- Editor source vs nginx `dist` → `served_artifact`. **Do not treat source
+  as served.**
+- LAN scan vs connected agent vs dirty pin → `inventory_vs_runtime`.
+  **Do not overwrite a dirty hardware tree.**
+- Visible Edit vs 403/429 → `capability_surface`. **Do not treat chrome as
+  a grant.**
+- Hardcoded page copy vs `lang=` → `locale_catalog`. **Do not hardcode UI
+  locale.**
 
 ## Relation to wellmanifest/dsl
 

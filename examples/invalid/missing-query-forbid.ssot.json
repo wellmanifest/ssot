@@ -1,0 +1,36 @@
+{
+  "schema": "wellmanifest.ssot/decision/v1",
+  "id": "invalid.query",
+  "version": "0.1.0",
+  "purpose": "Invalid: query_namespace without leak forbid.",
+  "context": {
+    "subject": "invalid.query",
+    "languages": ["typescript"],
+    "packaging": ["monorepo-path"],
+    "analyzer": {
+      "present": false,
+      "kind": "none",
+      "treatAsDebtUntilInterview": false
+    }
+  },
+  "policy": {
+    "kind": "pin_policy",
+    "edit": "upstream",
+    "onChange": "none",
+    "forbid": [
+      "delete_generated_mirror",
+      "couple_standalone_to_foreign_monorepo"
+    ]
+  },
+  "decisions": [
+    {
+      "id": "invalid.query.pair",
+      "kind": "query_namespace",
+      "canonical": { "ref": "uri-query-dsl" },
+      "trees": ["frontend/src/services/uri-query-dsl.ts"],
+      "actions": [{ "do": "scope_query_keys" }],
+      "forbid": []
+    }
+  ],
+  "questions": []
+}

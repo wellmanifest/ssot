@@ -1,0 +1,23 @@
+{
+  "schema": "wellmanifest.ssot/interview/v1",
+  "subject_id": "c2004.served-artifact",
+  "purpose": "Treat nginx frontend/dist as the served SSOT, not TypeScript source.",
+  "languages": ["typescript"],
+  "packaging": ["monorepo-path"],
+  "trees": [
+    "frontend/src",
+    "frontend/dist",
+    "scripts/build-frontend-if-stale.sh"
+  ],
+  "same_git_remote": false,
+  "same_pin": false,
+  "relationship": "served_artifact",
+  "must_stay_identical": "may_drift",
+  "different_protocol_by_design": false,
+  "canonical_ref": "frontend/dist",
+  "consumer_can_import": false,
+  "analyzer_present": false,
+  "analyzer_kind": "none",
+  "analyzer_noise": false,
+  "human_confirmed_debt": true
+}

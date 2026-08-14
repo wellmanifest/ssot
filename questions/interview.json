@@ -1,8 +1,8 @@
 {
   "schema": "wellmanifest.ssot/interview/v1",
   "id": "wellmanifest.ssot.interview",
-  "version": "0.1.0",
-  "purpose": "Classify duplication before treating analyzer output as debt.",
+  "version": "0.2.0",
+  "purpose": "Classify duplication, query namespaces, served artifacts, fleet inventory, capability chrome, and locale catalog before treating reports as debt.",
   "questions": [
     {
       "id": "subject_id",
@@ -65,6 +65,11 @@
         "facade",
         "allowed_divergence",
         "real_fork",
+        "query_namespace",
+        "served_artifact",
+        "inventory_vs_runtime",
+        "capability_surface",
+        "locale_catalog",
         "unknown"
       ],
       "required": true

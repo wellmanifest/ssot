@@ -1,0 +1,23 @@
+{
+  "schema": "wellmanifest.ssot/interview/v1",
+  "subject_id": "c2004.query-namespace",
+  "purpose": "Keep coil ADDRESS/COMMAND keys out of process-capability URI DSL.",
+  "languages": ["typescript"],
+  "packaging": ["monorepo-path"],
+  "trees": [
+    "frontend/src/services/shell-routing.service.ts",
+    "frontend/src/services/uri-query-dsl.ts",
+    "connect-config/frontend/src/modules/connect-config/pages/connect-config-process-capabilities.page.ts"
+  ],
+  "same_git_remote": false,
+  "same_pin": false,
+  "relationship": "query_namespace",
+  "must_stay_identical": "may_drift",
+  "different_protocol_by_design": false,
+  "canonical_ref": "frontend/src/services/uri-query-dsl.ts",
+  "consumer_can_import": true,
+  "analyzer_present": false,
+  "analyzer_kind": "none",
+  "analyzer_noise": false,
+  "human_confirmed_debt": true
+}

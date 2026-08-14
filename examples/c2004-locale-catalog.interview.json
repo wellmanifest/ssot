@@ -1,0 +1,21 @@
+{
+  "schema": "wellmanifest.ssot/interview/v1",
+  "subject_id": "c2004.locale-catalog",
+  "purpose": "Keep operator-facing headings in the locale catalog, not page source.",
+  "languages": ["typescript"],
+  "packaging": ["monorepo-path"],
+  "trees": [
+    "connect-config/frontend/src/modules/connect-config/pages/connect-config-process-capabilities.page.ts"
+  ],
+  "same_git_remote": false,
+  "same_pin": false,
+  "relationship": "locale_catalog",
+  "must_stay_identical": "may_drift",
+  "different_protocol_by_design": false,
+  "canonical_ref": "frontend/src/i18n",
+  "consumer_can_import": true,
+  "analyzer_present": false,
+  "analyzer_kind": "none",
+  "analyzer_noise": false,
+  "human_confirmed_debt": true
+}

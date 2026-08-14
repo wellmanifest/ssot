@@ -56,6 +56,11 @@
         "allowed_divergence",
         "real_fork",
         "same_file_noise",
+        "query_namespace",
+        "served_artifact",
+        "inventory_vs_runtime",
+        "capability_surface",
+        "locale_catalog",
         "pin_policy"
       ]
     },
@@ -71,7 +76,13 @@
         "vendor_and_gate_drift",
         "choose_canonical",
         "ask_clarifying_questions",
-        "ignore_analyzer_until_interview"
+        "ignore_analyzer_until_interview",
+        "scope_query_keys",
+        "rebuild_served_artifact",
+        "refuse_overwrite_dirty_tree",
+        "do_not_count_discovery_as_connected",
+        "test_operator_and_admin_separately",
+        "use_locale_catalog"
       ]
     },
     "forbidDo": {
@@ -80,7 +91,13 @@
         "delete_generated_mirror",
         "treat_analyzer_as_debt",
         "couple_standalone_to_foreign_monorepo",
-        "fork_logic_into_consumer"
+        "fork_logic_into_consumer",
+        "leak_query_across_modules",
+        "treat_source_as_served",
+        "overwrite_dirty_working_tree",
+        "count_lan_scan_as_connected_agent",
+        "treat_visible_edit_as_authorized",
+        "hardcode_ui_locale"
       ]
     },
     "context": {

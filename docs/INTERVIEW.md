@@ -36,3 +36,7 @@ PYTHONPATH=src python3 -m ssot interview --answers examples/analyzer-noise.inter
 ```
 
 That interview must emit `KIND same_file_noise` and a clarifying `QUESTION`.
+
+Runtime interviews (`query_namespace`, `served_artifact`,
+`inventory_vs_runtime`, `capability_surface`, `locale_catalog`) live next
+to the c2004 fixtures.

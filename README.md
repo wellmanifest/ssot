@@ -31,6 +31,11 @@ Lessons encoded here (method, not product-specific code):
    (`oqlos.hardware.client`).
 6. Do not couple a standalone product to another monorepo just to import
    SSOT; vendor and gate drift instead.
+7. Query keys belong to one module (`query_namespace`). Leftover
+   `COMMAND`/`ADDRESS` must not fail a foreign page.
+8. Served `dist` is the live SSOT when there is no HMR.
+9. LAN discovery, connected agents, and applied revision are three truths.
+10. Visible Edit is not a write grant. Locale catalog owns operator copy.
 
 ## Interview → DSL
 
@@ -74,12 +79,17 @@ Interactive interview (no `--answers`) reads stdin.
 | `allowed_divergence` | Different protocol or API by design | Document `KNOWN_DIVERGENT` |
 | `real_fork` | Independent evolution | Choose a canonical owner |
 | `same_file_noise` | Analyzer hit, relationship unknown | Ask clarifying questions |
+| `query_namespace` | URL/URI keys owned by one module | Scope keys; strip on navigate and arrival |
+| `served_artifact` | Live UI is a built artifact | Rebuild, reload, hard refresh |
+| `inventory_vs_runtime` | Scan ≠ agent ≠ applied pin | Refuse dirty overwrite |
+| `capability_surface` | Chrome ≠ POA grant | Test operator and admin separately |
+| `locale_catalog` | Operator copy lives in catalog | Do not hardcode UI locale |
 | `pin_policy` | Document-level pin rule | Always present on the decision document |
 
 ## Example: c2004
 
-`examples/c2004.ssot.json` records four decisions from the c2004 / oqlos
-review:
+`examples/c2004.ssot.json` records decisions from the c2004 / oqlos /
+maskservice review:
 
 - `packages/backend-shared-py` vs `extern/oqlos/packages/backend-shared-py`
   → `generated_mirror`
@@ -88,8 +98,14 @@ review:
 - `parentUrlBridge.js` → `allowed_divergence` (different postMessage
   protocols)
 - `packages/hardware-client-py` → `facade` over `oqlos.hardware.client`
+- coil query leak into process-capabilities → `query_namespace`
+- nginx `frontend/dist` vs source → `served_artifact`
+- fleet scan vs agent vs dirty tree → `inventory_vs_runtime`
+- Connect-ID Edit vs ACL → `capability_surface`
+- hardcoded Polish heading → `locale_catalog`
 
-Interview fixtures that regenerate each kind live next to that file.
+See `docs/MASKSERVICE.md`. Interview fixtures that regenerate each kind live
+next to that file.
 
 ## Layout
 
@@ -101,6 +117,7 @@ examples/      c2004 sample + invalid fixture
 src/ssot.py    interview, classify, suggest, validate
 tests/         deterministic checks
 dsl-manifest.json   wellmanifest.dsl/manifest/v1 for this pack
+docs/MASKSERVICE.md live mapping from maskservice lessons
 ```
 
 ## Related

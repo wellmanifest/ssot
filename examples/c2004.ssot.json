@@ -2,8 +2,8 @@
   "$schema": "https://wellmanifest.dev/schemas/ssot/decision/v1",
   "schema": "wellmanifest.ssot/decision/v1",
   "id": "c2004.ssot",
-  "version": "0.1.0",
-  "purpose": "Reusable SSOT decisions distilled from the c2004 vs oqlos dual-checkout and frontend-services parity review. Method, not c2004-specific code.",
+  "version": "0.2.0",
+  "purpose": "Reusable SSOT decisions from maskservice: dual-checkout, vendored parity, query namespaces, served dist, fleet inventory vs runtime, capability chrome, locale catalog.",
   "context": {
     "subject": "c2004.ssot",
     "languages": ["python", "javascript", "typescript"],
@@ -112,6 +112,96 @@
         { "do": "keep_facade_reexport_canonical", "target": "oqlos.hardware.client" }
       ],
       "forbid": ["fork_logic_into_consumer"]
+    },
+    {
+      "id": "c2004.query-namespace",
+      "kind": "query_namespace",
+      "canonical": {
+        "ref": "frontend/src/services/uri-query-dsl.ts",
+        "path": "frontend/src/services/uri-query-dsl.ts"
+      },
+      "trees": [
+        "frontend/src/services/shell-routing.service.ts",
+        "frontend/src/services/uri-query-dsl.ts",
+        "connect-config/frontend/src/modules/connect-config/pages/connect-config-process-capabilities.page.ts"
+      ],
+      "rationale": "Hardware COMMAND/ADDRESS keys must not leak into process-capability URI DSL. wellmanifest.dsl unknownPolicy=reject; strip on navigate and on arrival.",
+      "actions": [
+        { "do": "scope_query_keys", "target": "frontend/src/services/uri-query-dsl.ts" }
+      ],
+      "forbid": ["leak_query_across_modules"]
+    },
+    {
+      "id": "c2004.served-artifact",
+      "kind": "served_artifact",
+      "canonical": {
+        "ref": "frontend/dist",
+        "path": "frontend/dist"
+      },
+      "trees": [
+        "frontend/src",
+        "frontend/dist",
+        "scripts/build-frontend-if-stale.sh"
+      ],
+      "rationale": "nginx serves frontend/dist with no HMR. Source edits are not live until rebuild, reload, and a hard refresh. TestQL WAIT must follow the served bundle, not the editor buffer.",
+      "actions": [
+        { "do": "rebuild_served_artifact", "target": "frontend/dist" }
+      ],
+      "forbid": ["treat_source_as_served"]
+    },
+    {
+      "id": "c2004.inventory-vs-runtime",
+      "kind": "inventory_vs_runtime",
+      "canonical": {
+        "ref": "update/fleet_proxy",
+        "path": "update/fleet_proxy"
+      },
+      "trees": [
+        "update/fleet_proxy/discovery.py",
+        "update/fleet_proxy"
+      ],
+      "rationale": "LAN scan, connected websocket agents, and applied git revision are three truths. Fail-closed deploy must refuse a dirty tree (wellmanifest.deployment deploy-source-exact).",
+      "actions": [
+        { "do": "do_not_count_discovery_as_connected" },
+        { "do": "refuse_overwrite_dirty_tree" }
+      ],
+      "forbid": [
+        "count_lan_scan_as_connected_agent",
+        "overwrite_dirty_working_tree"
+      ]
+    },
+    {
+      "id": "c2004.capability-surface",
+      "kind": "capability_surface",
+      "canonical": {
+        "ref": "testql-testing/scenarios/gui-connect-id.testql.toon.yaml",
+        "path": "testql-testing/scenarios/gui-connect-id.testql.toon.yaml"
+      },
+      "trees": [
+        "testql-testing/scenarios/gui-connect-id.testql.toon.yaml",
+        "connect-id/frontend"
+      ],
+      "rationale": "Visible Edit is chrome, not a write grant. Operator 403/429 on API writes while admin/system can mutate is expected. TestQL must cover both roles.",
+      "actions": [
+        { "do": "test_operator_and_admin_separately" }
+      ],
+      "forbid": ["treat_visible_edit_as_authorized"]
+    },
+    {
+      "id": "c2004.locale-catalog",
+      "kind": "locale_catalog",
+      "canonical": {
+        "ref": "frontend/src/i18n",
+        "path": "frontend/src/i18n"
+      },
+      "trees": [
+        "connect-config/frontend/src/modules/connect-config/pages/connect-config-process-capabilities.page.ts"
+      ],
+      "rationale": "Hardcoded Polish headings stay Polish when lang=en. Operator-facing copy belongs in the locale catalog, not page-local getContent() strings.",
+      "actions": [
+        { "do": "use_locale_catalog", "target": "frontend/src/i18n" }
+      ],
+      "forbid": ["hardcode_ui_locale"]
     }
   ],
   "questions": []

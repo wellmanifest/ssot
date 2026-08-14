@@ -61,6 +61,47 @@ class ClassifyTests(unittest.TestCase):
         self.assertIn("treat_analyzer_as_debt", decision["forbid"])
         self.assertFalse(document["context"]["analyzer"]["treatAsDebtUntilInterview"])
 
+    def test_query_namespace_scopes_keys(self) -> None:
+        document = ssot.classify(_load("c2004-query-namespace.interview.json"))
+        decision = document["decisions"][0]
+        self.assertEqual(decision["kind"], "query_namespace")
+        self.assertIn("leak_query_across_modules", decision["forbid"])
+        self.assertIn("scope_query_keys", {item["do"] for item in decision["actions"]})
+
+    def test_served_artifact_rebuilds_dist(self) -> None:
+        document = ssot.classify(_load("c2004-served-artifact.interview.json"))
+        decision = document["decisions"][0]
+        self.assertEqual(decision["kind"], "served_artifact")
+        self.assertIn("treat_source_as_served", decision["forbid"])
+        self.assertIn("rebuild_served_artifact", {item["do"] for item in decision["actions"]})
+
+    def test_inventory_vs_runtime_refuses_dirty_overwrite(self) -> None:
+        document = ssot.classify(_load("c2004-inventory-vs-runtime.interview.json"))
+        decision = document["decisions"][0]
+        self.assertEqual(decision["kind"], "inventory_vs_runtime")
+        self.assertIn("overwrite_dirty_working_tree", decision["forbid"])
+        self.assertIn("count_lan_scan_as_connected_agent", decision["forbid"])
+
+    def test_capability_surface_splits_roles(self) -> None:
+        document = ssot.classify(_load("c2004-capability-surface.interview.json"))
+        decision = document["decisions"][0]
+        self.assertEqual(decision["kind"], "capability_surface")
+        self.assertIn("treat_visible_edit_as_authorized", decision["forbid"])
+
+    def test_locale_catalog_forbids_hardcoded_copy(self) -> None:
+        document = ssot.classify(_load("c2004-locale-catalog.interview.json"))
+        decision = document["decisions"][0]
+        self.assertEqual(decision["kind"], "locale_catalog")
+        self.assertIn("hardcode_ui_locale", decision["forbid"])
+        self.assertIn("use_locale_catalog", {item["do"] for item in decision["actions"]})
+
+    def test_stated_query_namespace_wins_over_detected_mirror(self) -> None:
+        answers = _load("c2004-query-namespace.interview.json")
+        answers["same_git_remote"] = True
+        answers["same_pin"] = True
+        decision = ssot.classify(answers)["decisions"][0]
+        self.assertEqual(decision["kind"], "query_namespace")
+
 
 class ValidateTests(unittest.TestCase):
     def test_c2004_example_passes(self) -> None:
@@ -78,6 +119,11 @@ class ValidateTests(unittest.TestCase):
         codes = {item.code for item in ssot.validate_decision(document)}
         self.assertIn("SSOT-COUPLE-001", codes)
 
+    def test_missing_query_forbid_fails(self) -> None:
+        document = _load("invalid/missing-query-forbid.ssot.json")
+        codes = {item.code for item in ssot.validate_decision(document)}
+        self.assertIn("SSOT-QUERY-001", codes)
+
 
 class ProjectionTests(unittest.TestCase):
     def test_suggest_emits_document_ssot(self) -> None:
@@ -88,6 +134,11 @@ class ProjectionTests(unittest.TestCase):
         self.assertIn("KIND vendored_copy", text)
         self.assertIn("KIND allowed_divergence", text)
         self.assertIn("KIND facade", text)
+        self.assertIn("KIND query_namespace", text)
+        self.assertIn("KIND served_artifact", text)
+        self.assertIn("KIND inventory_vs_runtime", text)
+        self.assertIn("KIND capability_surface", text)
+        self.assertIn("KIND locale_catalog", text)
         self.assertIn("POLICY pin", text)
         parsed = ssot.parse_dsl(text)
         self.assertEqual(parsed["id"], document["id"])

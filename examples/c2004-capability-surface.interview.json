@@ -1,0 +1,22 @@
+{
+  "schema": "wellmanifest.ssot/interview/v1",
+  "subject_id": "c2004.capability-surface",
+  "purpose": "Do not treat a visible Edit control as an operator write grant.",
+  "languages": ["typescript", "python"],
+  "packaging": ["monorepo-path"],
+  "trees": [
+    "testql-testing/scenarios/gui-connect-id.testql.toon.yaml",
+    "connect-id/frontend"
+  ],
+  "same_git_remote": false,
+  "same_pin": false,
+  "relationship": "capability_surface",
+  "must_stay_identical": "may_drift",
+  "different_protocol_by_design": false,
+  "canonical_ref": "testql-testing/scenarios/gui-connect-id.testql.toon.yaml",
+  "consumer_can_import": false,
+  "analyzer_present": false,
+  "analyzer_kind": "none",
+  "analyzer_noise": false,
+  "human_confirmed_debt": true
+}
