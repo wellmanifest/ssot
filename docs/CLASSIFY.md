@@ -33,9 +33,22 @@ One decision document. Kinds:
 | Stated discovery vs agent vs pin | `inventory_vs_runtime` | do not count scan as connected; refuse dirty overwrite |
 | Stated chrome vs grant | `capability_surface` | test operator and admin separately |
 | Stated UI copy ownership | `locale_catalog` | use locale catalog; forbid hardcoded copy |
+| Portal commercial sheet mirrors product offer | `facade` (or `generated_mirror`) | keep facade; bump `subactor/offer` binding first; forbid second price SSOT |
+| Portal brand tokens/copy mirror product brand | `facade` / `locale_catalog` | keep facade; bump `subactor/brand` first; forbid second brand SSOT |
 | Analyzer noise, relationship unknown | `same_file_noise` | ask questions; do not treat as debt |
 
 Document-level `POLICY pin` is always emitted.
+
+### Commercial and brand product packs
+
+When classifying Subactor (or similar) portal files:
+
+- `plans.json` / checkout price tables → facade of `subactor/offer` (not of
+  `wellmanifest/policy-dsl`, which owns promo decisions only).
+- Brand CSS tokens, prefer/forbid vocabulary, public plan names → facade or
+  locale projection of `subactor/brand`.
+- Do not classify a portal ticket rewrite as `real_fork` of prices or brand;
+  require an integration bump of the product HOME pack first.
 
 ## Errors
 

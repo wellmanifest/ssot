@@ -104,6 +104,12 @@ maskservice review:
 - Connect-ID Edit vs ACL → `capability_surface`
 - hardcoded Polish heading → `locale_catalog`
 
+Commercial portals (informative): `plans.json` and brand CSS/token maps are
+`facade` (or `locale_catalog`) over product HOMEs `subactor/offer` and
+`subactor/brand`. Policy sales profiles are not a second price SSOT. See
+`docs/CLASSIFY.md` and standards pointers `wellmanifest/offer`,
+`wellmanifest/brand`.
+
 See `docs/MASKSERVICE.md`. Interview fixtures that regenerate each kind live
 next to that file.
 
