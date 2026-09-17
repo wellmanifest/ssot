@@ -53,7 +53,7 @@
     {
       "path": "src/ssot.py",
       "role": "parser-contract",
-      "digest": "sha256:c75bb1467f5ef34bce1b4e227d514ecb63341e53a6925918da1f21bc83c287ba"
+      "digest": "sha256:bc142a71d97387cf1d4c9915bbf5fe88767d561504405aa8d905cce9066264bb"
     },
     {
       "path": "docs/SSOT.md",
@@ -149,6 +149,36 @@
       "path": "examples/c2004.ssot.dsl",
       "role": "example",
       "digest": "sha256:0c66cde21801aa8998baa0fd1543e22987f2045d6533a17f108109c74c549de5"
+    },
+    {
+      "path": "schemas/ssot-standards-lock.schema.json",
+      "role": "schema",
+      "digest": "sha256:020a0ab1ead0c1924a58805f03dece37301b36c34c2e1ffbcab21d1ca3a76838"
+    },
+    {
+      "path": "docs/STANDARDS-LOCK.md",
+      "role": "documentation",
+      "digest": "sha256:fef1625fd5bbd09350b74c012741ebfec0085e03a8a0baae20a897fae091e553"
+    },
+    {
+      "path": "docs/ERROR/SSOT-LOCK-001.md",
+      "role": "documentation",
+      "digest": "sha256:d62a0264a2b041b0898b66bb92a32cd01e56b6b0411b95fe52d8ba0271e5b472"
+    },
+    {
+      "path": "docs/ERROR/SSOT-STALE-001.md",
+      "role": "documentation",
+      "digest": "sha256:3958b22b9c4238e039da39f77e88c803c1e95ab11d6a5a3946295d0946f013b3"
+    },
+    {
+      "path": "examples/standards-lock.adopter.json",
+      "role": "example",
+      "digest": "sha256:2801474b07f3cdf29e4364db0e6b5075db8f6aa54f108fc9d36bf0a348218111"
+    },
+    {
+      "path": "examples/standards-lock.stale.json",
+      "role": "example",
+      "digest": "sha256:4343cd31ee7b33b49b292418c2e5dff4d5948f1de36f97e3a81830dcb54816cb"
     }
   ],
   "namespaces": [
@@ -212,7 +242,9 @@
       "SSOT-SERVE-001",
       "SSOT-FLEET-001",
       "SSOT-POA-001",
-      "SSOT-I18N-001"
+      "SSOT-I18N-001",
+      "SSOT-LOCK-001",
+      "SSOT-STALE-001"
     ],
     "criticalCodes": [
       "SSOT-COUPLE-001"

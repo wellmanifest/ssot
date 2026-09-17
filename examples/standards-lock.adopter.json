@@ -1,0 +1,36 @@
+{
+  "$schema": "https://wellmanifest.com/schemas/ssot/standards-lock/v1",
+  "schema": "wellmanifest.standards-lock/v1",
+  "version": "1.0.0",
+  "entries": [
+    {
+      "standard": "wellmanifest.dsl",
+      "version": "0.1.0-dev",
+      "repository": "https://github.com/wellmanifest/dsl",
+      "revision": "b7d0595c95e5abbb48ebfdbdae0bc6d43c6f82f4",
+      "contracts": [
+        {
+          "ref": "schema://wellmanifest.com/dsl/manifest/v1",
+          "digest": "sha256:34d356b76bbd483372df84bb986e15bb84e9c1f8b11b7dc9e3a6c7276c85ed13"
+        }
+      ]
+    }
+  ],
+  "migrations": [
+    {
+      "from": "0.1.0-dev",
+      "to": "0.2.0-dev",
+      "steps": [
+        "Run the upstream dsl_check gate against dsl-manifest.json.",
+        "Re-run `ssot standards drift` and fix every stale revision or digest.",
+        "Request trusted-validator review before merging the bump."
+      ],
+      "notes": "Illustrative migration path; copy the real upstream changelog before bumping a pin."
+    }
+  ],
+  "updatePolicy": {
+    "onNewCompatible": "create_pr",
+    "onBreaking": "create_ticket",
+    "merge": "trusted-validator"
+  }
+}

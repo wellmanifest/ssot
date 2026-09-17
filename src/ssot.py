@@ -18,12 +18,18 @@ from typing import Any, Iterable, Mapping, Sequence
 
 SCHEMA_DECISION = "wellmanifest.ssot/decision/v1"
 SCHEMA_INTERVIEW = "wellmanifest.ssot/interview/v1"
+SCHEMA_STANDARDS_LOCK = "wellmanifest.standards-lock/v1"
 IDENTIFIER = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
 SEMVER = re.compile(
     r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
     r"(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$"
 )
 RELATIVE_PATH = re.compile(r"^(?!/)(?!.*(?:^|/)\.\.(?:/|$))(?!.*\\).+$")
+REVISION = re.compile(r"^[a-f0-9]{40}$")
+DIGEST = re.compile(r"^sha256:[a-f0-9]{64}$")
+MERGE_POLICIES = {"trusted-validator", "manual"}
+ON_COMPATIBLE = {"create_pr", "create_ticket", "none"}
+ON_BREAKING = {"create_ticket", "block", "none"}
 
 KINDS = {
     "generated_mirror",
@@ -710,6 +716,179 @@ def validate_decision(document: Mapping[str, Any]) -> list[Finding]:
     return findings
 
 
+def _lock_document(document: Mapping[str, Any]) -> Mapping[str, Any]:
+    lock = document.get("standardsLock")
+    if isinstance(lock, dict):
+        return lock
+    return document
+
+
+def _lock_entries(document: Mapping[str, Any]) -> list[Any]:
+    lock = _lock_document(document)
+    if isinstance(lock.get("entries"), list):
+        return list(lock["entries"])
+    return []
+
+
+def validate_standards_lock(document: Mapping[str, Any]) -> list[Finding]:
+    """Validate a wellmanifest.standards-lock/v1 document (fail closed).
+
+    Accepts either a standalone standards-lock document or the
+    ``standardsLock`` block embedded in a ``dsl-manifest.json``.
+    """
+
+    lock = _lock_document(document)
+    findings: list[Finding] = []
+    if lock.get("schema") != SCHEMA_STANDARDS_LOCK:
+        findings.append(
+            Finding(
+                "SSOT-LOCK-001",
+                f"standards-lock schema must be {SCHEMA_STANDARDS_LOCK}",
+                "$.schema",
+            )
+        )
+    entries = _lock_entries(document)
+    if not entries:
+        findings.append(Finding("SSOT-LOCK-001", "standards-lock needs at least one entry", "$.entries"))
+        return findings
+
+    for index, entry in enumerate(entries):
+        prefix = f"$.entries[{index}]"
+        if not isinstance(entry, dict):
+            findings.append(Finding("SSOT-LOCK-001", "entry must be an object", prefix))
+            continue
+        if not _is_identifier(entry.get("standard")):
+            findings.append(Finding("SSOT-LOCK-001", "standard must be a stable identifier", f"{prefix}.standard"))
+        if not _is_semver(entry.get("version")):
+            findings.append(Finding("SSOT-LOCK-001", "version must be SemVer", f"{prefix}.version"))
+        repository = entry.get("repository")
+        if not isinstance(repository, str) or not repository.startswith("https://"):
+            findings.append(Finding("SSOT-LOCK-001", "repository must be an https URI", f"{prefix}.repository"))
+        if not isinstance(entry.get("revision"), str) or not REVISION.fullmatch(entry["revision"]):
+            findings.append(
+                Finding("SSOT-LOCK-001", "revision must be a 40-character git sha", f"{prefix}.revision")
+            )
+        contracts = entry.get("contracts")
+        if not isinstance(contracts, list) or not contracts:
+            findings.append(Finding("SSOT-LOCK-001", "entry needs at least one contract", f"{prefix}.contracts"))
+            continue
+        for contract_index, contract in enumerate(contracts):
+            cprefix = f"{prefix}.contracts[{contract_index}]"
+            if not isinstance(contract, dict):
+                findings.append(Finding("SSOT-LOCK-001", "contract must be an object", cprefix))
+                continue
+            ref = contract.get("ref")
+            if not isinstance(ref, str) or not ref.startswith(("https://", "schema://")):
+                findings.append(Finding("SSOT-LOCK-001", "contract ref must be a URI", f"{cprefix}.ref"))
+            if not isinstance(contract.get("digest"), str) or not DIGEST.fullmatch(contract["digest"]):
+                findings.append(Finding("SSOT-LOCK-001", "contract digest must be sha256:<hex>", f"{cprefix}.digest"))
+
+    migrations = lock.get("migrations")
+    if migrations is not None:
+        if not isinstance(migrations, list):
+            findings.append(Finding("SSOT-LOCK-001", "migrations must be an array", "$.migrations"))
+        else:
+            for index, migration in enumerate(migrations):
+                prefix = f"$.migrations[{index}]"
+                if not isinstance(migration, dict):
+                    findings.append(Finding("SSOT-LOCK-001", "migration must be an object", prefix))
+                    continue
+                if not _is_semver(migration.get("from")):
+                    findings.append(Finding("SSOT-LOCK-001", "migration.from must be SemVer", f"{prefix}.from"))
+                if not _is_semver(migration.get("to")):
+                    findings.append(Finding("SSOT-LOCK-001", "migration.to must be SemVer", f"{prefix}.to"))
+                steps = migration.get("steps")
+                if not isinstance(steps, list) or not steps or not all(
+                    isinstance(step, str) and step.strip() for step in steps
+                ):
+                    findings.append(Finding("SSOT-LOCK-001", "migration needs at least one step", f"{prefix}.steps"))
+
+    policy = lock.get("updatePolicy")
+    if policy is not None:
+        if not isinstance(policy, dict):
+            findings.append(Finding("SSOT-LOCK-001", "updatePolicy must be an object", "$.updatePolicy"))
+        else:
+            merge = policy.get("merge")
+            if merge not in MERGE_POLICIES:
+                findings.append(
+                    Finding(
+                        "SSOT-LOCK-001",
+                        "updatePolicy.merge must be trusted-validator or manual (never automatic)",
+                        "$.updatePolicy.merge",
+                    )
+                )
+            if policy.get("onNewCompatible") not in ON_COMPATIBLE:
+                findings.append(
+                    Finding("SSOT-LOCK-001", "unknown updatePolicy.onNewCompatible", "$.updatePolicy.onNewCompatible")
+                )
+            if policy.get("onBreaking") not in ON_BREAKING:
+                findings.append(
+                    Finding("SSOT-LOCK-001", "unknown updatePolicy.onBreaking", "$.updatePolicy.onBreaking")
+                )
+    return findings
+
+
+def detect_standards_drift(lock: Mapping[str, Any], upstream: Mapping[str, Any]) -> list[Finding]:
+    """Compare a lock against the current upstream standards and flag stale pins.
+
+    Drift is never silent: every entry whose revision or contract digest no
+    longer matches upstream yields a finding so an adopter can bump the pin.
+    """
+
+    findings: list[Finding] = []
+    upstream_entries = {entry.get("standard"): entry for entry in _lock_entries(upstream)}
+    for index, entry in enumerate(_lock_entries(lock)):
+        if not isinstance(entry, dict):
+            continue
+        standard = entry.get("standard")
+        current = upstream_entries.get(standard)
+        if not isinstance(current, dict):
+            findings.append(
+                Finding(
+                    "SSOT-STALE-001",
+                    f"{standard!r} is not present in the upstream standards",
+                    f"$.entries[{index}]",
+                )
+            )
+            continue
+        prefix = f"$.entries[{index}]"
+        if entry.get("revision") != current.get("revision"):
+            findings.append(
+                Finding(
+                    "SSOT-STALE-001",
+                    f"{standard!r} revision is stale: pinned {entry.get('revision')!r}, "
+                    f"current {current.get('revision')!r}",
+                    f"{prefix}.revision",
+                )
+            )
+        if entry.get("version") != current.get("version"):
+            findings.append(
+                Finding(
+                    "SSOT-STALE-001",
+                    f"{standard!r} version is stale: pinned {entry.get('version')!r}, "
+                    f"current {current.get('version')!r}",
+                    f"{prefix}.version",
+                )
+            )
+        current_contracts = {item.get("ref"): item for item in current.get("contracts") or []}
+        for contract_index, contract in enumerate(entry.get("contracts") or []):
+            ref = contract.get("ref")
+            current_contract = current_contracts.get(ref) if isinstance(contract, dict) else None
+            if (
+                isinstance(contract, dict)
+                and isinstance(current_contract, dict)
+                and contract.get("digest") != current_contract.get("digest")
+            ):
+                findings.append(
+                    Finding(
+                        "SSOT-STALE-001",
+                        f"{standard!r} contract {ref!r} digest is stale",
+                        f"{prefix}.contracts[{contract_index}].digest",
+                    )
+                )
+    return findings
+
+
 def _quote(value: str) -> str:
     escaped = value.replace("\\", "\\\\").replace('"', '\\"')
     return f'"{escaped}"'
@@ -987,6 +1166,10 @@ def _parser() -> argparse.ArgumentParser:
     validate = sub.add_parser("validate", help="validate a decision or interview document")
     validate.add_argument("document", type=Path)
     validate.add_argument("--format", choices=("text", "json"), default="text")
+    standards = sub.add_parser("standards", help="validate a standards-lock document and detect drift")
+    standards.add_argument("document", type=Path)
+    standards.add_argument("--upstream", type=Path, help="upstream standards lock or manifest to detect drift against")
+    standards.add_argument("--format", choices=("text", "json"), default="text")
     sub.add_parser("questions", help="print the questionnaire")
     return parser
 
@@ -1014,6 +1197,13 @@ def main(argv: Iterable[str] | None = None) -> int:
             return 1
         sys.stdout.write(render_dsl(document))
         return 0
+    if args.command == "standards":
+        lock = _read_document(args.document)
+        findings = validate_standards_lock(lock)
+        if args.upstream:
+            findings += detect_standards_drift(lock, _read_document(args.upstream))
+        print(render_findings(findings, args.format))
+        return 1 if findings else 0
     document = _read_document(args.document)
     if document.get("schema") == SCHEMA_INTERVIEW:
         findings = validate_interview(document)

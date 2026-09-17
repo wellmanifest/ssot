@@ -125,6 +125,46 @@ class ValidateTests(unittest.TestCase):
         self.assertIn("SSOT-QUERY-001", codes)
 
 
+class StandardsLockTests(unittest.TestCase):
+    def test_pack_standards_lock_passes(self) -> None:
+        manifest = json.loads((ROOT / "dsl-manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(ssot.validate_standards_lock(manifest["standardsLock"]), [])
+
+    def test_adopter_example_passes(self) -> None:
+        document = _load("standards-lock.adopter.json")
+        self.assertEqual(ssot.validate_standards_lock(document), [])
+
+    def test_bad_revision_fails(self) -> None:
+        document = _load("standards-lock.adopter.json")
+        document["entries"][0]["revision"] = "not-a-sha"
+        codes = {item.code for item in ssot.validate_standards_lock(document)}
+        self.assertIn("SSOT-LOCK-001", codes)
+
+    def test_bad_digest_fails(self) -> None:
+        document = _load("standards-lock.adopter.json")
+        document["entries"][0]["contracts"][0]["digest"] = "md5:abcd"
+        codes = {item.code for item in ssot.validate_standards_lock(document)}
+        self.assertIn("SSOT-LOCK-001", codes)
+
+    def test_automatic_merge_is_forbidden(self) -> None:
+        document = _load("standards-lock.adopter.json")
+        document["updatePolicy"]["merge"] = "automatic"
+        codes = {item.code for item in ssot.validate_standards_lock(document)}
+        self.assertIn("SSOT-LOCK-001", codes)
+
+    def test_drift_detects_stale_copy(self) -> None:
+        manifest = json.loads((ROOT / "dsl-manifest.json").read_text(encoding="utf-8"))
+        stale = _load("standards-lock.stale.json")
+        self.assertEqual(ssot.validate_standards_lock(stale), [])
+        codes = {item.code for item in ssot.detect_standards_drift(stale, manifest)}
+        self.assertIn("SSOT-STALE-001", codes)
+
+    def test_drift_is_silent_for_current_pin(self) -> None:
+        manifest = json.loads((ROOT / "dsl-manifest.json").read_text(encoding="utf-8"))
+        current = _load("standards-lock.adopter.json")
+        self.assertEqual(ssot.detect_standards_drift(current, manifest), [])
+
+
 class ProjectionTests(unittest.TestCase):
     def test_suggest_emits_document_ssot(self) -> None:
         document = _load("c2004.ssot.json")
@@ -176,6 +216,27 @@ class CliTests(unittest.TestCase):
             code = ssot.main(["validate", str(EXAMPLES / "c2004.ssot.json")])
         self.assertEqual(code, 0)
         self.assertEqual(buffer.getvalue().strip(), "ok")
+
+    def test_standards_cli_ok(self) -> None:
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            code = ssot.main(["standards", str(EXAMPLES / "standards-lock.adopter.json")])
+        self.assertEqual(code, 0)
+        self.assertEqual(buffer.getvalue().strip(), "ok")
+
+    def test_standards_cli_detects_stale(self) -> None:
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            code = ssot.main(
+                [
+                    "standards",
+                    str(EXAMPLES / "standards-lock.stale.json"),
+                    "--upstream",
+                    str(ROOT / "dsl-manifest.json"),
+                ]
+            )
+        self.assertEqual(code, 1)
+        self.assertIn("SSOT-STALE-001", buffer.getvalue())
 
 
 if __name__ == "__main__":

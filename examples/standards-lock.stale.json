@@ -1,0 +1,23 @@
+{
+  "schema": "wellmanifest.standards-lock/v1",
+  "version": "1.0.0",
+  "entries": [
+    {
+      "standard": "wellmanifest.dsl",
+      "version": "0.0.9-dev",
+      "repository": "https://github.com/wellmanifest/dsl",
+      "revision": "a11ce00000000000000000000000000000000000",
+      "contracts": [
+        {
+          "ref": "schema://wellmanifest.com/dsl/manifest/v1",
+          "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ]
+    }
+  ],
+  "updatePolicy": {
+    "onNewCompatible": "create_pr",
+    "onBreaking": "create_ticket",
+    "merge": "trusted-validator"
+  }
+}

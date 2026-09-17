@@ -64,6 +64,8 @@ PYTHONPATH=src python3 -m ssot interview --answers examples/c2004-backend-shared
 PYTHONPATH=src python3 -m ssot classify examples/c2004-frontend-services.interview.json
 PYTHONPATH=src python3 -m ssot suggest examples/c2004.ssot.json
 PYTHONPATH=src python3 -m ssot validate examples/c2004.ssot.json
+PYTHONPATH=src python3 -m ssot standards examples/standards-lock.adopter.json
+PYTHONPATH=src python3 -m ssot standards examples/standards-lock.adopter.json --upstream dsl-manifest.json
 PYTHONPATH=src python3 -m unittest discover -s tests
 ```
 
@@ -117,10 +119,10 @@ next to that file.
 
 ```text
 questions/     questionnaire catalog
-schemas/       interview + decision JSON Schema
+schemas/       interview, decision, and standards-lock JSON Schemas
 docs/          command, error, and critical pages
-examples/      c2004 sample + invalid fixture
-src/ssot.py    interview, classify, suggest, validate
+examples/      c2004 sample + standards-lock adopter/stale fixtures
+src/ssot.py    interview, classify, suggest, validate, standards
 tests/         deterministic checks
 dsl-manifest.json   wellmanifest.dsl/manifest/v1 for this pack
 docs/MASKSERVICE.md live mapping from maskservice lessons
