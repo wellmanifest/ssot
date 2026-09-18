@@ -264,16 +264,16 @@
       "uri": "https://github.com/wellmanifest/dsl"
     },
     {
-      "standard": "wellmanifest.modularity",
+      "standard": "subactor.modularity",
       "version": "0.1.0-dev",
       "relation": "compatible-with",
-      "uri": "https://github.com/wellmanifest/modularity"
+      "uri": "https://github.com/wellmanifest/modularity/tree/18718d96d3a86c5ac0a0bb5905f4a0db34199bc4"
     },
     {
       "standard": "wellmanifest.poa",
-      "version": "0.1.0-dev",
+      "version": "0.1.0",
       "relation": "compatible-with",
-      "uri": "https://github.com/wellmanifest/poa"
+      "uri": "https://github.com/wellmanifest/poa/tree/8424a7f5c977915ee08404b8b82d63e0f5e44ea2"
     },
     {
       "standard": "wellmanifest.deployment",
@@ -294,6 +294,34 @@
           {
             "ref": "schema://wellmanifest.com/dsl/manifest/v1",
             "digest": "sha256:34d356b76bbd483372df84bb986e15bb84e9c1f8b11b7dc9e3a6c7276c85ed13"
+          }
+        ]
+      },
+      {
+        "standard": "subactor.modularity",
+        "version": "0.1.0-dev",
+        "repository": "https://github.com/wellmanifest/modularity",
+        "revision": "18718d96d3a86c5ac0a0bb5905f4a0db34199bc4",
+        "contracts": [
+          {
+            "ref": "https://github.com/wellmanifest/modularity/blob/18718d96d3a86c5ac0a0bb5905f4a0db34199bc4/docs/schemas/modularity-workspace.schema.v1.json",
+            "digest": "sha256:98db51af5b17e9a480f587f462da52aafd70d8b40ae87d873d7a42fdd4fd5a68"
+          }
+        ]
+      },
+      {
+        "standard": "wellmanifest.poa",
+        "version": "0.1.0",
+        "repository": "https://github.com/wellmanifest/poa",
+        "revision": "8424a7f5c977915ee08404b8b82d63e0f5e44ea2",
+        "contracts": [
+          {
+            "ref": "https://github.com/wellmanifest/poa/blob/8424a7f5c977915ee08404b8b82d63e0f5e44ea2/standard/poa-process.schema.v1.json",
+            "digest": "sha256:9222fbe9aded60df6d3c0b39b7a4a89b8ad627f122349e909fdfba44047669ab"
+          },
+          {
+            "ref": "https://github.com/wellmanifest/poa/blob/8424a7f5c977915ee08404b8b82d63e0f5e44ea2/standard/poa-process.v1.gbnf",
+            "digest": "sha256:d13d736cc3f4e07dd9366378183055ff0d9ad10dd4fc5bf1f322e2dc37d919ee"
           }
         ]
       }
