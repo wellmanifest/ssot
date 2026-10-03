@@ -217,6 +217,7 @@
     "responseSchemas": [],
     "naturalLanguage": "typed-source-only",
     "sourceSchema": "wellmanifest.ssot/interview/v1",
+    "decisionProtocol": "none",
     "modelAuthority": "none",
     "strict": true
   },
@@ -312,6 +313,12 @@
       "version": "0.1.0-dev",
       "relation": "compatible-with",
       "uri": "https://github.com/wellmanifest/deployment"
+    },
+    {
+      "standard": "wellmanifest.project-ssot",
+      "version": "0.2.0-dev",
+      "relation": "compatible-with",
+      "uri": "https://github.com/wellmanifest/project-ssot"
     }
   ],
   "standardsLock": {
