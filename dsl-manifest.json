@@ -38,27 +38,27 @@
     {
       "path": "schemas/ssot-decision.schema.json",
       "role": "normative-source",
-      "digest": "sha256:653f1b5903b181c273826d47c049395f5206e598ab9fdc25dde770ef7378933f"
+      "digest": "sha256:d7d7fd8813c26b68925c273a2ee2b8a85db8d6467652ad0acb85395eb5a53d39"
     },
     {
       "path": "schemas/ssot-interview.schema.json",
       "role": "schema",
-      "digest": "sha256:8b7296392b3ea881974b0727772555eadced0c3113f802e20b8d37cc76194787"
+      "digest": "sha256:600534e0c55debb87d9eb998f25fdfb848d83eeee053d27bc6b0fd52dd32afc2"
     },
     {
       "path": "questions/interview.json",
       "role": "profile",
-      "digest": "sha256:99b41f278e07fb99124c5bf6c4abe685c986a96f76889f2d0cfd8e02febe147f"
+      "digest": "sha256:ebe5434b2c0f27f95cfdd988916bef1bd5b05f21ecc4bd908245c9642df37a29"
     },
     {
       "path": "src/ssot.py",
       "role": "parser-contract",
-      "digest": "sha256:bc142a71d97387cf1d4c9915bbf5fe88767d561504405aa8d905cce9066264bb"
+      "digest": "sha256:a4957a75c9ca27ae591655b071e677e3e01d18c54a70c0d8686af3ddf72a203e"
     },
     {
       "path": "docs/SSOT.md",
       "role": "documentation",
-      "digest": "sha256:0952435d99fcb6ab59a70495a10231983c8a03674d7d32b8459f05ccd0f2d6f9"
+      "digest": "sha256:682bfa21b898220616de5a624e656fd5516f25058b0c682f634cb1dbf275f4b0"
     },
     {
       "path": "docs/INTERVIEW.md",
@@ -68,7 +68,7 @@
     {
       "path": "docs/CLASSIFY.md",
       "role": "documentation",
-      "digest": "sha256:b359f25e2da70970664964f80f33541c23291a87aac8f63b95a7659b3cbae18c"
+      "digest": "sha256:f9df3f4d70787778690aec92e44fd4a2c51662cc944e85c87a578960503dc126"
     },
     {
       "path": "docs/SUGGEST.md",
@@ -78,7 +78,7 @@
     {
       "path": "docs/VALIDATE.md",
       "role": "documentation",
-      "digest": "sha256:c16b2c3cdff103703d7b7873da7fa6662612a2282a859af9a7cb614b55275bf1"
+      "digest": "sha256:99d1e603847c6c7ca5ade9dd4b5617c1918a34022a8f435d1d82597928a2a9cd"
     },
     {
       "path": "docs/ERROR/SSOT-KIND-001.md",
@@ -129,6 +129,11 @@
       "path": "docs/ERROR/SSOT-I18N-001.md",
       "role": "documentation",
       "digest": "sha256:8977db70adbb845dedaa1785c7d4b358d9fcb9c1bcd2789f4f43e4209c6e44b7"
+    },
+    {
+      "path": "docs/ERROR/SSOT-CONFIG-001.md",
+      "role": "documentation",
+      "digest": "sha256:5d8af78cc1950c8cfcc1cdd4b8907cadbf96a5537fde971d5ecfd62253f0bc22"
     },
     {
       "path": "docs/MASKSERVICE.md",
@@ -244,6 +249,7 @@
       "SSOT-FLEET-001",
       "SSOT-POA-001",
       "SSOT-I18N-001",
+      "SSOT-CONFIG-001",
       "SSOT-LOCK-001",
       "SSOT-STALE-001"
     ],

@@ -33,6 +33,7 @@ One decision document. Kinds:
 | Stated discovery vs agent vs pin | `inventory_vs_runtime` | do not count scan as connected; refuse dirty overwrite |
 | Stated chrome vs grant | `capability_surface` | test operator and admin separately |
 | Stated UI copy ownership | `locale_catalog` | use locale catalog; forbid hardcoded copy |
+| Stated deployment value (host, port, URL, path, model id) with one config source | `config_binding` | bind consumers to the source; declare one env override; forbid literal copies |
 | Portal commercial sheet mirrors product offer | `facade` (or `generated_mirror`) | keep facade; bump `subactor/offer` binding first; forbid second price SSOT |
 | Portal brand tokens/copy mirror product brand | `facade` / `locale_catalog` | keep facade; bump `subactor/brand` first; forbid second brand SSOT |
 | Analyzer noise, relationship unknown | `same_file_noise` | ask questions; do not treat as debt |

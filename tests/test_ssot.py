@@ -95,6 +95,22 @@ class ClassifyTests(unittest.TestCase):
         self.assertIn("hardcode_ui_locale", decision["forbid"])
         self.assertIn("use_locale_catalog", {item["do"] for item in decision["actions"]})
 
+    def test_config_binding_binds_to_one_source_and_forbids_literals(self) -> None:
+        document = ssot.classify(_load("willmux-config-binding.interview.json"))
+        decision = document["decisions"][0]
+        self.assertEqual(decision["kind"], "config_binding")
+        self.assertIn("hardcode_deployment_value", decision["forbid"])
+        actions = {item["do"] for item in decision["actions"]}
+        self.assertEqual({"bind_to_config_source", "declare_env_override"}, actions)
+        self.assertEqual([], ssot.validate_decision(document))
+
+    def test_config_binding_without_forbid_fails_closed(self) -> None:
+        document = ssot.classify(_load("willmux-config-binding.interview.json"))
+        document["decisions"][0]["forbid"] = []
+        document["decisions"][0]["actions"] = [{"do": "bind_to_config_source"}]
+        codes = [finding.code for finding in ssot.validate_decision(document)]
+        self.assertEqual(["SSOT-CONFIG-001", "SSOT-CONFIG-001"], codes)
+
     def test_stated_query_namespace_wins_over_detected_mirror(self) -> None:
         answers = _load("c2004-query-namespace.interview.json")
         answers["same_git_remote"] = True

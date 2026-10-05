@@ -35,6 +35,9 @@ A JSON or text SSOT document.
 | `SSOT-FLEET-001` | inventory vs runtime missing dirty-tree or scan forbids |
 | `SSOT-POA-001` | capability surface missing operator/admin split |
 | `SSOT-I18N-001` | locale catalog missing catalog action or hardcode forbid |
+| `SSOT-CONFIG-001` | config binding missing config-source/override action or literal forbid |
+| `SSOT-LOCK-001` | standards-lock document invalid or allows automatic merge |
+| `SSOT-STALE-001` | standards-lock entry behind the upstream revision, version or digest |
 
 ## Examples
 

@@ -86,6 +86,7 @@ Interactive interview (no `--answers`) reads stdin.
 | `inventory_vs_runtime` | Scan ≠ agent ≠ applied pin | Refuse dirty overwrite |
 | `capability_surface` | Chrome ≠ POA grant | Test operator and admin separately |
 | `locale_catalog` | Operator copy lives in catalog | Do not hardcode UI locale |
+| `config_binding` | Deployment value lives in one config source | Refer by name, one env override, no literal copies |
 | `pin_policy` | Document-level pin rule | Always present on the decision document |
 
 ## Example: c2004
@@ -105,6 +106,7 @@ maskservice review:
 - fleet scan vs agent vs dirty tree → `inventory_vs_runtime`
 - Connect-ID Edit vs ACL → `capability_surface`
 - hardcoded Polish heading → `locale_catalog`
+- `127.0.0.1:8085` copied from the app catalog into grammar/UI → `config_binding`
 
 Commercial portals (informative): `plans.json` and brand CSS/token maps are
 `facade` (or `locale_catalog`) over product HOMEs `subactor/offer` and
