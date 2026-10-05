@@ -43,6 +43,7 @@ KINDS = {
     "inventory_vs_runtime",
     "capability_surface",
     "locale_catalog",
+    "config_binding",
     "pin_policy",
 }
 PACKAGING = {
@@ -65,6 +66,7 @@ RELATIONSHIPS = {
     "inventory_vs_runtime",
     "capability_surface",
     "locale_catalog",
+    "config_binding",
     "unknown",
 }
 ACTIONS = {
@@ -85,6 +87,8 @@ ACTIONS = {
     "do_not_count_discovery_as_connected",
     "test_operator_and_admin_separately",
     "use_locale_catalog",
+    "bind_to_config_source",
+    "declare_env_override",
 }
 FORBIDS = {
     "delete_either_tree",
@@ -98,6 +102,7 @@ FORBIDS = {
     "count_lan_scan_as_connected_agent",
     "treat_visible_edit_as_authorized",
     "hardcode_ui_locale",
+    "hardcode_deployment_value",
 }
 
 NOISE_QUESTION = (
@@ -220,6 +225,103 @@ def _action(name: str, target: str | None = None) -> dict[str, str]:
     return item
 
 
+# Kinds a human states (runtime, UI, fleet, config): what they must propose and forbid.
+# One table drives both classify() and validate_decision(), so the contract cannot drift between them.
+# actions: (name, takes canonical_ref); validation reports missing actions first, then missing forbids.
+STATED_KINDS: dict[str, dict[str, Any]] = {
+    "query_namespace": {
+        "code": "SSOT-QUERY-001",
+        "actions": [("scope_query_keys", True)],
+        "forbid": ["leak_query_across_modules"],
+        "rationale": (
+            "Shell or hardware result keys must stay in the owning module. "
+            "URI DSL and capability ACL reject unknown extension keys "
+            "(wellmanifest.poa / wellmanifest.dsl unknownPolicy=reject). "
+            "Strip or namespace foreign keys on navigate and on arrival; do "
+            "not fail the whole page on leftover COMMAND/ADDRESS from another domain."
+        ),
+    },
+    "served_artifact": {
+        "code": "SSOT-SERVE-001",
+        "actions": [("rebuild_served_artifact", True)],
+        "forbid": ["treat_source_as_served"],
+        "rationale": (
+            "Source edits are not the served SSOT when nginx or a static "
+            "dist has no HMR. Rebuild and reload the artifact; a hard "
+            "refresh and a longer TestQL WAIT are required before claiming "
+            "the UI is fixed."
+        ),
+    },
+    "inventory_vs_runtime": {
+        "code": "SSOT-FLEET-001",
+        "actions": [("do_not_count_discovery_as_connected", False), ("refuse_overwrite_dirty_tree", False)],
+        "required_actions": [],
+        "forbid": ["count_lan_scan_as_connected_agent", "overwrite_dirty_working_tree"],
+        "check_forbid": ["overwrite_dirty_working_tree", "count_lan_scan_as_connected_agent"],  # report order kept from 0.2.0-dev
+        "rationale": (
+            "LAN discovery, connected agents, and applied git revision are "
+            "three different truths. A scan that sees a host is not an "
+            "online agent. A fail-closed updater must refuse a dirty tree "
+            "instead of overwriting live hardware work "
+            "(wellmanifest.deployment deploy-source-exact)."
+        ),
+    },
+    "capability_surface": {
+        "code": "SSOT-POA-001",
+        "actions": [("test_operator_and_admin_separately", False)],
+        "forbid": ["treat_visible_edit_as_authorized"],
+        "rationale": (
+            "Visible chrome (Edit, list, scanner) is not a grant. Operator "
+            "and admin are different POA capabilities. A 403/429 on write "
+            "while Edit is on screen is expected unless the session holds "
+            "the write capability. TestQL must cover both roles."
+        ),
+    },
+    "locale_catalog": {
+        "code": "SSOT-I18N-001",
+        "actions": [("use_locale_catalog", True)],
+        "forbid": ["hardcode_ui_locale"],
+        "rationale": (
+            "Operator-facing copy belongs in the locale catalog. A hardcoded "
+            "getContent() or Polish heading stays Polish when lang=en. "
+            "Treat the catalog as SSOT; do not ship page-local strings."
+        ),
+    },
+    "config_binding": {
+        "code": "SSOT-CONFIG-001",
+        "actions": [("bind_to_config_source", True), ("declare_env_override", False)],
+        "forbid": ["hardcode_deployment_value"],
+        "rationale": (
+            "A deployment value (host, port, URL, LAN address, absolute path, "
+            "model id, interval) has one declared configuration source. Code, "
+            "grammar, UI and tests refer to it by name and resolve it at run "
+            "time; a literal copy is a second SSOT that drifts per node. The "
+            "override is one declared, documented name (explicit last layer "
+            "wins, as in wellmanifest.env-dsl), not an ambient lookup. Secrets "
+            "are out of scope here: they follow wellmanifest.secrets."
+        ),
+    },
+}
+
+
+def _stated_kind(kind: str, canonical_ref: str | None) -> tuple[str, list[dict[str, str]], list[str], str]:
+    spec = STATED_KINDS[kind]
+    actions = [_action(name, canonical_ref if takes_ref else None) for name, takes_ref in spec["actions"]]
+    return kind, actions, list(spec["forbid"]), spec["rationale"]
+
+
+def _stated_kind_findings(kind: str | None, decision: Mapping[str, Any], prefix: str) -> list[Finding]:
+    spec = STATED_KINDS.get(kind or "")
+    if not spec:
+        return []
+    have_actions = {item.get("do") for item in decision.get("actions") or []}
+    have_forbid = set(decision.get("forbid") or [])
+    required = spec.get("required_actions", [name for name, _ in spec["actions"]])
+    out = [Finding(spec["code"], f"{kind} must propose {name}", f"{prefix}.actions") for name in required if name not in have_actions]
+    out += [Finding(spec["code"], f"{kind} must forbid {name}", f"{prefix}.forbid") for name in spec.get("check_forbid", spec["forbid"]) if name not in have_forbid]
+    return out
+
+
 def classify(answers: Mapping[str, Any]) -> dict[str, Any]:
     """Turn typed interview answers into a propose-only SSOT decision document."""
 
@@ -271,67 +373,13 @@ def classify(answers: Mapping[str, Any]) -> dict[str, Any]:
         "inventory_vs_runtime",
         "capability_surface",
         "locale_catalog",
+        "config_binding",
     }
     detected_mirror = same_remote and same_pin is True and len(trees) >= 2
 
     # Stated runtime/UI/fleet kinds win over inferred dual-checkout mirrors.
-    if relationship == "query_namespace":
-        kind = "query_namespace"
-        actions = [_action("scope_query_keys", answers.get("canonical_ref"))]
-        forbid = ["leak_query_across_modules"]
-        extra["rationale"] = (
-            "Shell or hardware result keys must stay in the owning module. "
-            "URI DSL and capability ACL reject unknown extension keys "
-            "(wellmanifest.poa / wellmanifest.dsl unknownPolicy=reject). "
-            "Strip or namespace foreign keys on navigate and on arrival; do "
-            "not fail the whole page on leftover COMMAND/ADDRESS from another domain."
-        )
-    elif relationship == "served_artifact":
-        kind = "served_artifact"
-        actions = [_action("rebuild_served_artifact", answers.get("canonical_ref"))]
-        forbid = ["treat_source_as_served"]
-        extra["rationale"] = (
-            "Source edits are not the served SSOT when nginx or a static "
-            "dist has no HMR. Rebuild and reload the artifact; a hard "
-            "refresh and a longer TestQL WAIT are required before claiming "
-            "the UI is fixed."
-        )
-    elif relationship == "inventory_vs_runtime":
-        kind = "inventory_vs_runtime"
-        actions = [
-            _action("do_not_count_discovery_as_connected"),
-            _action("refuse_overwrite_dirty_tree"),
-        ]
-        forbid = [
-            "count_lan_scan_as_connected_agent",
-            "overwrite_dirty_working_tree",
-        ]
-        extra["rationale"] = (
-            "LAN discovery, connected agents, and applied git revision are "
-            "three different truths. A scan that sees a host is not an "
-            "online agent. A fail-closed updater must refuse a dirty tree "
-            "instead of overwriting live hardware work "
-            "(wellmanifest.deployment deploy-source-exact)."
-        )
-    elif relationship == "capability_surface":
-        kind = "capability_surface"
-        actions = [_action("test_operator_and_admin_separately")]
-        forbid = ["treat_visible_edit_as_authorized"]
-        extra["rationale"] = (
-            "Visible chrome (Edit, list, scanner) is not a grant. Operator "
-            "and admin are different POA capabilities. A 403/429 on write "
-            "while Edit is on screen is expected unless the session holds "
-            "the write capability. TestQL must cover both roles."
-        )
-    elif relationship == "locale_catalog":
-        kind = "locale_catalog"
-        actions = [_action("use_locale_catalog", answers.get("canonical_ref"))]
-        forbid = ["hardcode_ui_locale"]
-        extra["rationale"] = (
-            "Operator-facing copy belongs in the locale catalog. A hardcoded "
-            "getContent() or Polish heading stays Polish when lang=en. "
-            "Treat the catalog as SSOT; do not ship page-local strings."
-        )
+    if relationship in STATED_KINDS:
+        kind, actions, forbid, extra["rationale"] = _stated_kind(relationship, answers.get("canonical_ref"))
     elif relationship == "generated_mirror" or detected_mirror:
         kind = "generated_mirror"
         actions = [
@@ -614,96 +662,7 @@ def validate_decision(document: Mapping[str, Any]) -> list[Finding]:
                         f"{prefix}.questions",
                     )
                 )
-        if kind == "query_namespace":
-            action_names = {item.get("do") for item in decision.get("actions") or []}
-            if "scope_query_keys" not in action_names:
-                findings.append(
-                    Finding(
-                        "SSOT-QUERY-001",
-                        "query_namespace must propose scope_query_keys",
-                        f"{prefix}.actions",
-                    )
-                )
-            if "leak_query_across_modules" not in (decision.get("forbid") or []):
-                findings.append(
-                    Finding(
-                        "SSOT-QUERY-001",
-                        "query_namespace must forbid leak_query_across_modules",
-                        f"{prefix}.forbid",
-                    )
-                )
-        if kind == "served_artifact":
-            action_names = {item.get("do") for item in decision.get("actions") or []}
-            if "rebuild_served_artifact" not in action_names:
-                findings.append(
-                    Finding(
-                        "SSOT-SERVE-001",
-                        "served_artifact must propose rebuild_served_artifact",
-                        f"{prefix}.actions",
-                    )
-                )
-            if "treat_source_as_served" not in (decision.get("forbid") or []):
-                findings.append(
-                    Finding(
-                        "SSOT-SERVE-001",
-                        "served_artifact must forbid treat_source_as_served",
-                        f"{prefix}.forbid",
-                    )
-                )
-        if kind == "inventory_vs_runtime":
-            forbids = set(decision.get("forbid") or [])
-            if "overwrite_dirty_working_tree" not in forbids:
-                findings.append(
-                    Finding(
-                        "SSOT-FLEET-001",
-                        "inventory_vs_runtime must forbid overwrite_dirty_working_tree",
-                        f"{prefix}.forbid",
-                    )
-                )
-            if "count_lan_scan_as_connected_agent" not in forbids:
-                findings.append(
-                    Finding(
-                        "SSOT-FLEET-001",
-                        "inventory_vs_runtime must forbid count_lan_scan_as_connected_agent",
-                        f"{prefix}.forbid",
-                    )
-                )
-        if kind == "capability_surface":
-            action_names = {item.get("do") for item in decision.get("actions") or []}
-            if "test_operator_and_admin_separately" not in action_names:
-                findings.append(
-                    Finding(
-                        "SSOT-POA-001",
-                        "capability_surface must propose test_operator_and_admin_separately",
-                        f"{prefix}.actions",
-                    )
-                )
-            if "treat_visible_edit_as_authorized" not in (decision.get("forbid") or []):
-                findings.append(
-                    Finding(
-                        "SSOT-POA-001",
-                        "capability_surface must forbid treat_visible_edit_as_authorized",
-                        f"{prefix}.forbid",
-                    )
-                )
-        if kind == "locale_catalog":
-            action_names = {item.get("do") for item in decision.get("actions") or []}
-            if "use_locale_catalog" not in action_names:
-                findings.append(
-                    Finding(
-                        "SSOT-I18N-001",
-                        "locale_catalog must propose use_locale_catalog",
-                        f"{prefix}.actions",
-                    )
-                )
-            if "hardcode_ui_locale" not in (decision.get("forbid") or []):
-                findings.append(
-                    Finding(
-                        "SSOT-I18N-001",
-                        "locale_catalog must forbid hardcode_ui_locale",
-                        f"{prefix}.forbid",
-                    )
-                )
+        findings.extend(_stated_kind_findings(kind, decision, prefix))
         for tree in trees:
             if not _is_path(tree):
                 findings.append(Finding("SSOT-TREE-001", f"invalid tree path {tree!r}", f"{prefix}.trees"))

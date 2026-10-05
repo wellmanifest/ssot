@@ -41,6 +41,9 @@ PYTHONPATH=src python3 -m ssot validate <decision.json>
   a grant.**
 - Hardcoded page copy vs `lang=` → `locale_catalog`. **Do not hardcode UI
   locale.**
+- Host, port, URL, LAN address, path or model id copied out of its config
+  source → `config_binding`. **Refer by name; one declared override; no
+  literal copies (SSOT-CONFIG-001).**
 
 ## Relation to wellmanifest/dsl
 

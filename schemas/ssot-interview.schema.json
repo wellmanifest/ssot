@@ -71,6 +71,7 @@
         "inventory_vs_runtime",
         "capability_surface",
         "locale_catalog",
+        "config_binding",
         "unknown"
       ]
     },

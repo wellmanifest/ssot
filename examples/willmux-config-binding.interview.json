@@ -1,0 +1,23 @@
+{
+  "schema": "wellmanifest.ssot/interview/v1",
+  "subject_id": "willmux.web-app-address",
+  "purpose": "Keep a web app's address in the app catalog; grammar, UI and agent name the app and resolve the address at run time.",
+  "languages": ["python", "javascript", "json"],
+  "packaging": ["monorepo-path"],
+  "trees": [
+    "agent/willmux_agent/catalog.yaml",
+    "web/src/grammar.json",
+    "web/src/willmux.html"
+  ],
+  "same_git_remote": false,
+  "same_pin": false,
+  "relationship": "config_binding",
+  "must_stay_identical": "may_drift",
+  "different_protocol_by_design": false,
+  "canonical_ref": "agent/willmux_agent/catalog.yaml",
+  "consumer_can_import": true,
+  "analyzer_present": false,
+  "analyzer_kind": "none",
+  "analyzer_noise": false,
+  "human_confirmed_debt": true
+}

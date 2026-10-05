@@ -61,6 +61,7 @@
         "inventory_vs_runtime",
         "capability_surface",
         "locale_catalog",
+        "config_binding",
         "pin_policy"
       ]
     },
@@ -82,7 +83,9 @@
         "refuse_overwrite_dirty_tree",
         "do_not_count_discovery_as_connected",
         "test_operator_and_admin_separately",
-        "use_locale_catalog"
+        "use_locale_catalog",
+        "bind_to_config_source",
+        "declare_env_override"
       ]
     },
     "forbidDo": {
@@ -97,7 +100,8 @@
         "overwrite_dirty_working_tree",
         "count_lan_scan_as_connected_agent",
         "treat_visible_edit_as_authorized",
-        "hardcode_ui_locale"
+        "hardcode_ui_locale",
+        "hardcode_deployment_value"
       ]
     },
     "context": {
