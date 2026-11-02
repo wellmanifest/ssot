@@ -53,7 +53,7 @@
     {
       "path": "src/ssot.py",
       "role": "parser-contract",
-      "digest": "sha256:a4957a75c9ca27ae591655b071e677e3e01d18c54a70c0d8686af3ddf72a203e"
+      "digest": "sha256:63e15481fb0f1121b89068503b27589db42ffe772048afb9edfabc29e8cf3bd9"
     },
     {
       "path": "docs/SSOT.md",

@@ -9,7 +9,10 @@ projection, not a second language.
 from __future__ import annotations
 
 import argparse
+import ast
+import hashlib
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -378,6 +381,16 @@ def classify(answers: Mapping[str, Any]) -> dict[str, Any]:
     detected_mirror = same_remote and same_pin is True and len(trees) >= 2
 
     # Stated runtime/UI/fleet kinds win over inferred dual-checkout mirrors.
+    is_allowed_div = (
+        relationship == "allowed_divergence"
+        or answers.get("different_protocol_by_design")
+        or answers.get("must_stay_identical") == "may_drift"
+    ) and relationship != "vendored_copy"
+    is_vendored = (
+        relationship == "vendored_copy"
+        or "vendored-copy" in packaging
+        or answers.get("must_stay_identical") == "identical"
+    )
     if relationship in STATED_KINDS:
         kind, actions, forbid, extra["rationale"] = _stated_kind(relationship, answers.get("canonical_ref"))
     elif relationship == "generated_mirror" or detected_mirror:
@@ -406,84 +419,71 @@ def classify(answers: Mapping[str, Any]) -> dict[str, Any]:
             "A facade re-exports the canonical implementation. Keep the thin "
             "import; do not copy business logic into the consumer."
         )
-    elif (
-        relationship == "allowed_divergence"
-        or answers.get("different_protocol_by_design")
-        or answers.get("must_stay_identical") == "may_drift"
-    ) and relationship != "vendored_copy":
-        kind = "allowed_divergence"
-        actions = [_action("document_known_divergent")]
-        forbid = []
-        if reason:
-            extra["knownDivergent"] = {"reason": reason}
-        else:
-            decision_questions.append(REASON_QUESTION)
-            questions.append(REASON_QUESTION)
-        extra["rationale"] = (
-            "Copies may differ by design. Record a KNOWN_DIVERGENT reason so "
-            "drift stays a conscious state."
-        )
-    elif (
-        relationship == "vendored_copy"
-        or "vendored-copy" in packaging
-        or answers.get("must_stay_identical") == "identical"
-    ):
-        if answers.get("different_protocol_by_design"):
-            kind = "allowed_divergence"
-            actions = [_action("document_known_divergent")]
-            if reason:
-                extra["knownDivergent"] = {"reason": reason}
-            else:
-                decision_questions.append(REASON_QUESTION)
-                questions.append(REASON_QUESTION)
-        elif answers.get("must_stay_identical") == "unknown":
-            kind = "vendored_copy"
-            actions = [_action("ask_clarifying_questions")]
-            decision_questions.append(IDENTICAL_QUESTION)
-            questions.append(IDENTICAL_QUESTION)
-        else:
-            kind = "vendored_copy"
-            gate_kind = "parity_test"
-            extra["gate"] = {
-                "kind": gate_kind,
-                "path": gate_path or "tests/test_ssot_parity.py",
-            }
-            actions = [
-                _action("keep_parity_test" if gate_path else "add_parity_test", extra["gate"]["path"])
-            ]
-            if not can_import:
-                actions.append(_action("vendor_and_gate_drift"))
-                forbid.append("couple_standalone_to_foreign_monorepo")
-            extra["rationale"] = (
-                "Vendored copies must stay identical unless moved to "
-                "KNOWN_DIVERGENT. Gate drift with a parity test; do not couple "
-                "a standalone product to another monorepo just to import SSOT."
-            )
-    elif relationship == "real_fork":
-        kind = "real_fork"
-        actions = [_action("choose_canonical", answers.get("canonical_ref"))]
-        extra["rationale"] = (
-            "Independent evolution. Choose one canonical owner or document "
-            "why the fork must remain."
-        )
-    elif analyzer_present and analyzer_noise and not confirmed and not known_relationship:
-        kind = "same_file_noise"
-        actions = [
-            _action("ask_clarifying_questions"),
-            _action("ignore_analyzer_until_interview"),
-        ]
-        forbid = ["treat_analyzer_as_debt"]
-        decision_questions.append(NOISE_QUESTION)
-        questions.append(NOISE_QUESTION)
-        extra["rationale"] = (
-            "Indexes are noisy. Ask clarifying questions before treating "
-            "analyzer output as debt."
-        )
     else:
-        kind = "same_file_noise"
-        actions = [_action("ask_clarifying_questions")]
-        questions.append(IDENTICAL_QUESTION)
-        decision_questions.append(IDENTICAL_QUESTION)
+        fallback_noise_candidate = analyzer_present and analyzer_noise and not confirmed and not known_relationship
+        if is_allowed_div or is_vendored:
+            if is_allowed_div or answers.get("different_protocol_by_design"):
+                kind = "allowed_divergence"
+                actions = [_action("document_known_divergent")]
+                forbid = []
+                if reason:
+                    extra["knownDivergent"] = {"reason": reason}
+                else:
+                    decision_questions.append(REASON_QUESTION)
+                    questions.append(REASON_QUESTION)
+                if is_allowed_div:
+                    extra["rationale"] = (
+                        "Copies may differ by design. Record a KNOWN_DIVERGENT reason so "
+                        "drift stays a conscious state."
+                    )
+            elif answers.get("must_stay_identical") == "unknown":
+                kind = "vendored_copy"
+                actions = [_action("ask_clarifying_questions")]
+                decision_questions.append(IDENTICAL_QUESTION)
+                questions.append(IDENTICAL_QUESTION)
+            else:
+                kind = "vendored_copy"
+                gate_kind = "parity_test"
+                extra["gate"] = {
+                    "kind": gate_kind,
+                    "path": gate_path or "tests/test_ssot_parity.py",
+                }
+                actions = [
+                    _action("keep_parity_test" if gate_path else "add_parity_test", extra["gate"]["path"])
+                ]
+                if not can_import:
+                    actions.append(_action("vendor_and_gate_drift"))
+                    forbid.append("couple_standalone_to_foreign_monorepo")
+                extra["rationale"] = (
+                    "Vendored copies must stay identical unless moved to "
+                    "KNOWN_DIVERGENT. Gate drift with a parity test; do not couple "
+                    "a standalone product to another monorepo just to import SSOT."
+                )
+        elif relationship == "real_fork":
+            kind = "real_fork"
+            actions = [_action("choose_canonical", answers.get("canonical_ref"))]
+            extra["rationale"] = (
+                "Independent evolution. Choose one canonical owner or document "
+                "why the fork must remain."
+            )
+        elif fallback_noise_candidate:
+            kind = "same_file_noise"
+            actions = [
+                _action("ask_clarifying_questions"),
+                _action("ignore_analyzer_until_interview"),
+            ]
+            forbid = ["treat_analyzer_as_debt"]
+            decision_questions.append(NOISE_QUESTION)
+            questions.append(NOISE_QUESTION)
+            extra["rationale"] = (
+                "Indexes are noisy. Ask clarifying questions before treating "
+                "analyzer output as debt."
+            )
+        else:
+            kind = "same_file_noise"
+            actions = [_action("ask_clarifying_questions")]
+            questions.append(IDENTICAL_QUESTION)
+            decision_questions.append(IDENTICAL_QUESTION)
 
     if not can_import and "couple_standalone_to_foreign_monorepo" not in policy_forbid:
         policy_forbid.append("couple_standalone_to_foreign_monorepo")
@@ -934,6 +934,35 @@ def _unquote(value: str) -> str:
     return text
 
 
+def _apply_decision_token(current: dict[str, Any], head: str, rest: str) -> None:
+    scalar_map = {"KIND": "kind", "RATIONALE": "rationale"}
+    canonical_map = {"CANONICAL": "ref", "MODULE": "module", "CANONICAL_PATH": "path"}
+    list_map = {"TREE": "trees", "FORBID": "forbid", "QUESTION": "questions"}
+    if head in scalar_map:
+        current[scalar_map[head]] = _unquote(rest) if head == "RATIONALE" else rest
+        return
+    if head in canonical_map:
+        current["canonical"][canonical_map[head]] = rest
+        return
+    if head in list_map:
+        current[list_map[head]].append(_unquote(rest) if head == "QUESTION" else rest)
+        return
+    if head in {"FACADE", "REASON"}:
+        if head == "FACADE":
+            current["facade"] = {"path": rest}
+        else:
+            current["knownDivergent"] = {"reason": _unquote(rest)}
+    elif head in {"GATE", "ACTION"}:
+        first, _, second = rest.partition(" ")
+        if head == "GATE":
+            current["gate"] = {"kind": first, "path": second}
+        else:
+            item = {"do": first}
+            if second:
+                item["target"] = second
+            current["actions"].append(item)
+
+
 def parse_dsl(text: str) -> dict[str, Any]:
     """Parse the text projection back to the canonical JSON AST."""
 
@@ -946,6 +975,7 @@ def parse_dsl(text: str) -> dict[str, Any]:
     }
     section = "root"
     current: dict[str, Any] | None = None
+    root_scalars = {"ID": "id", "VERSION": "version", "SCHEMA": "schema", "PURPOSE": "purpose"}
 
     for raw_line in text.splitlines():
         line = raw_line.rstrip()
@@ -957,22 +987,11 @@ def parse_dsl(text: str) -> dict[str, Any]:
         rest = tokens[1] if len(tokens) > 1 else ""
 
         if indent == 0:
-            if head == "DOCUMENT":
-                continue
-            if head == "ID":
-                document["id"] = rest
-            elif head == "VERSION":
-                document["version"] = rest
-            elif head == "SCHEMA":
-                document["schema"] = rest
-            elif head == "PURPOSE":
-                document["purpose"] = _unquote(rest)
-            elif head == "CONTEXT":
-                section = "context"
-                current = document["context"]
-            elif head == "POLICY":
-                section = "policy"
-                current = document["policy"]
+            if head in root_scalars:
+                document[root_scalars[head]] = _unquote(rest) if head == "PURPOSE" else rest
+            elif head in {"CONTEXT", "POLICY", "QUESTIONS"}:
+                section = head.lower()
+                current = document if head == "QUESTIONS" else document[section]
             elif head == "DECISION":
                 section = "decision"
                 current = {
@@ -984,18 +1003,13 @@ def parse_dsl(text: str) -> dict[str, Any]:
                     "questions": [],
                 }
                 document["decisions"].append(current)
-            elif head == "QUESTIONS":
-                section = "questions"
-                current = document
             continue
 
         if section == "context" and current is not None:
             if head == "SUBJECT":
                 current["subject"] = rest
-            elif head == "LANGUAGE":
-                current["languages"].append(rest)
-            elif head == "PACKAGING":
-                current["packaging"].append(rest)
+            elif head in {"LANGUAGE", "PACKAGING"}:
+                current["languages" if head == "LANGUAGE" else "packaging"].append(rest)
             elif head == "ANALYZER":
                 parts = rest.split()
                 current["analyzer"]["kind"] = parts[0]
@@ -1006,42 +1020,12 @@ def parse_dsl(text: str) -> dict[str, Any]:
                     elif key == "treat_as_debt":
                         current["analyzer"]["treatAsDebtUntilInterview"] = value == "true"
         elif section == "policy" and current is not None:
-            if head == "EDIT":
-                current["edit"] = rest
-            elif head == "ON_CHANGE":
-                current["onChange"] = rest
+            if head in {"EDIT", "ON_CHANGE"}:
+                current["edit" if head == "EDIT" else "onChange"] = rest
             elif head == "FORBID":
                 current["forbid"].append(rest)
         elif section == "decision" and current is not None:
-            if head == "KIND":
-                current["kind"] = rest
-            elif head == "CANONICAL":
-                current["canonical"]["ref"] = rest
-            elif head == "MODULE":
-                current["canonical"]["module"] = rest
-            elif head == "CANONICAL_PATH":
-                current["canonical"]["path"] = rest
-            elif head == "TREE":
-                current["trees"].append(rest)
-            elif head == "FACADE":
-                current["facade"] = {"path": rest}
-            elif head == "GATE":
-                kind, _, path = rest.partition(" ")
-                current["gate"] = {"kind": kind, "path": path}
-            elif head == "REASON":
-                current["knownDivergent"] = {"reason": _unquote(rest)}
-            elif head == "RATIONALE":
-                current["rationale"] = _unquote(rest)
-            elif head == "ACTION":
-                name, _, target = rest.partition(" ")
-                item = {"do": name}
-                if target:
-                    item["target"] = target
-                current["actions"].append(item)
-            elif head == "FORBID":
-                current["forbid"].append(rest)
-            elif head == "QUESTION":
-                current["questions"].append(_unquote(rest))
+            _apply_decision_token(current, head, rest)
         elif section == "questions":
             if head == "QUESTION":
                 document["questions"].append(_unquote(rest))
@@ -1052,6 +1036,140 @@ def parse_dsl(text: str) -> dict[str, Any]:
         if not decision["canonical"]:
             del decision["canonical"]
     return document
+
+
+RE_ENV_ENDPOINT_DEFAULT = re.compile(
+    r'(?:\bgetenv|\benviron\.get|\benviron\.setdefault)\(\s*["\'](?P<var>[A-Za-z_][A-Za-z0-9_]*)["\']\s*,\s*'
+    r'["\'](?P<default>(?:https?://|ws://|tcp://)?(?:localhost|127\.0\.0\.1|0\.0\.0\.0|[0-9]{1,3}(?:\.[0-9]{1,3}){3})(?::[0-9]{2,5})?[^"\']*)["\']'
+)
+
+
+def _tree_digest(path: Path) -> str | None:
+    if path.is_file():
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    if path.is_dir():
+        hasher = hashlib.sha256()
+        for dirpath, dirs, files in os.walk(path):
+            dirs[:] = sorted(d for d in dirs if not d.startswith(".") and d != "__pycache__")
+            for fname in sorted(files):
+                fpath = Path(dirpath) / fname
+                rel = fpath.relative_to(path).as_posix()
+                hasher.update(rel.encode("utf-8") + b"\0")
+                hasher.update(fpath.read_bytes() + b"\0")
+        return hasher.hexdigest()
+    return None
+
+
+def audit_codebase(
+    target_dir: Path,
+    decision_doc: Mapping[str, Any] | None = None,
+) -> list[Finding]:
+    """Scan a repository for SSOT config drift, duplicate AST functions, and tree parity drift."""
+    findings: list[Finding] = []
+    root = target_dir.resolve()
+    excluded_dirs = {
+        ".git", ".worktrees", ".governance", "governance", "venv", ".venv",
+        "node_modules", "__pycache__", "build", "dist", "tests", "test", "fixtures", "examples", "docs",
+    }
+    env_defaults: dict[str, str] = {}
+    env_vars: dict[str, tuple[str, str]] = {}
+    func_bodies: dict[str, tuple[str, str]] = {}
+
+    for dirpath, dirs, files in os.walk(root):
+        dirs[:] = sorted(d for d in dirs if d not in excluded_dirs and not d.startswith("."))
+        for fname in sorted(files):
+            if not fname.endswith(".py") or fname.startswith("test_") or fname.endswith("_test.py"):
+                continue
+            fpath = Path(dirpath) / fname
+            rel = fpath.relative_to(root).as_posix()
+            try:
+                text = fpath.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+
+            for lineno, line in enumerate(text.splitlines(), start=1):
+                if line.lstrip().startswith("#"):
+                    continue
+                for m_env in RE_ENV_ENDPOINT_DEFAULT.finditer(line):
+                    var_name = m_env.group("var")
+                    val = m_env.group("default")
+                    loc = f"{rel}:{lineno}"
+                    prev = env_defaults.get(val)
+                    prev_var = env_vars.get(var_name)
+                    if prev is not None and not prev.startswith(f"{rel}:"):
+                        findings.append(
+                            Finding(
+                                "SSOT-CONFIG-001",
+                                f"duplicate deployment endpoint default {val!r} across files (already in {prev})",
+                                loc,
+                            )
+                        )
+                    elif prev_var is not None and not prev_var[1].startswith(f"{rel}:"):
+                        findings.append(
+                            Finding(
+                                "SSOT-CONFIG-001",
+                                f"env var {var_name!r} endpoint default {val!r} redefined across files (was {prev_var[0]!r} in {prev_var[1]})",
+                                loc,
+                            )
+                        )
+                    else:
+                        env_defaults.setdefault(val, loc)
+                        env_vars.setdefault(var_name, (val, loc))
+
+            try:
+                tree = ast.parse(text, filename=rel)
+            except SyntaxError:
+                continue
+            for node in ast.walk(tree):
+                if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    continue
+                body = list(node.body)
+                if (
+                    body
+                    and isinstance(body[0], ast.Expr)
+                    and isinstance(body[0].value, ast.Constant)
+                    and isinstance(body[0].value.value, str)
+                ):
+                    body = body[1:]
+                node_weight = sum(1 for _ in ast.walk(node))
+                if len(body) < 3 or node_weight < 12:
+                    continue
+                sig = "|".join(ast.dump(stmt, annotate_fields=True, include_attributes=False) for stmt in body)
+                loc = f"{rel}:{node.lineno}"
+                prev_func = func_bodies.get(sig)
+                if prev_func is not None and not prev_func[1].startswith(f"{rel}:"):
+                    findings.append(
+                        Finding(
+                            "SSOT-COUPLE-001",
+                            f"function {node.name!r} duplicates AST body of {prev_func[0]!r} in {prev_func[1]}",
+                            loc,
+                        )
+                    )
+                elif prev_func is None:
+                    func_bodies[sig] = (node.name, loc)
+
+    if decision_doc is not None:
+        for index, decision in enumerate(decision_doc.get("decisions") or []):
+            if not isinstance(decision, dict):
+                continue
+            kind = decision.get("kind")
+            gate = decision.get("gate") or {}
+            if kind not in {"generated_mirror", "vendored_copy"}:
+                continue
+            if kind == "vendored_copy" and gate.get("kind") not in {None, "parity_test"}:
+                continue
+            trees = [root / t for t in (decision.get("trees") or []) if isinstance(t, str)]
+            digests = [d for d in (_tree_digest(p) for p in trees) if d is not None]
+            if len(digests) >= 2 and len(set(digests)) > 1:
+                findings.append(
+                    Finding(
+                        "SSOT-STALE-001",
+                        f"{kind} trees have drifted in content: {[p.relative_to(root).as_posix() for p in trees if p.exists()]}",
+                        f"$.decisions[{index}].trees",
+                    )
+                )
+
+    return findings
 
 
 def render_findings(findings: Sequence[Finding], output_format: str) -> str:
@@ -1077,6 +1195,11 @@ def _read_document(path: Path) -> dict[str, Any]:
     return json.loads(text)
 
 
+def _out(msg: str, stream: Any = None) -> None:
+    target = sys.stdout if stream is None else stream
+    target.write(f"{msg}\n")
+
+
 def run_interview(answers_path: Path | None, output: Path | None, output_format: str) -> int:
     if answers_path is None:
         questionnaire = load_questionnaire()
@@ -1091,7 +1214,7 @@ def run_interview(answers_path: Path | None, output: Path | None, output_format:
         answers = load_json(answers_path)
     findings = validate_interview(answers)
     if findings:
-        print(render_findings(findings, "text"), file=sys.stderr)
+        _out(render_findings(findings, "text"), stream=sys.stderr)
         return 1
     document = classify(answers)
     payload = render_dsl(document) if output_format == "dsl" else dump_json(document)
@@ -1106,7 +1229,7 @@ def cmd_questions() -> int:
     questionnaire = load_questionnaire()
     for index, question in enumerate(questionnaire["questions"], start=1):
         required = "required" if question.get("required") else "optional"
-        print(f"{index:02d}. [{question['id']}] ({required}) {question['prompt']}")
+        _out(f"{index:02d}. [{question['id']}] ({required}) {question['prompt']}")
     return 0
 
 
@@ -1129,6 +1252,10 @@ def _parser() -> argparse.ArgumentParser:
     standards.add_argument("document", type=Path)
     standards.add_argument("--upstream", type=Path, help="upstream standards lock or manifest to detect drift against")
     standards.add_argument("--format", choices=("text", "json"), default="text")
+    audit = sub.add_parser("audit", help="scan a repository for SSOT config drift, duplicate AST functions, and tree parity")
+    audit.add_argument("target", type=Path, nargs="?", default=Path("."))
+    audit.add_argument("--decision", type=Path, help="optional SSOT decision document to verify tree parity against")
+    audit.add_argument("--format", choices=("text", "json"), default="text")
     sub.add_parser("questions", help="print the questionnaire")
     return parser
 
@@ -1143,7 +1270,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         answers = load_json(args.answers)
         findings = validate_interview(answers)
         if findings:
-            print(render_findings(findings, "text"), file=sys.stderr)
+            _out(render_findings(findings, "text"), stream=sys.stderr)
             return 1
         document = classify(answers)
         sys.stdout.write(render_dsl(document) if args.format == "dsl" else dump_json(document))
@@ -1152,7 +1279,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         document = _read_document(args.document)
         findings = validate_decision(document)
         if findings:
-            print(render_findings(findings, "text"), file=sys.stderr)
+            _out(render_findings(findings, "text"), stream=sys.stderr)
             return 1
         sys.stdout.write(render_dsl(document))
         return 0
@@ -1161,14 +1288,19 @@ def main(argv: Iterable[str] | None = None) -> int:
         findings = validate_standards_lock(lock)
         if args.upstream:
             findings += detect_standards_drift(lock, _read_document(args.upstream))
-        print(render_findings(findings, args.format))
+        _out(render_findings(findings, args.format))
+        return 1 if findings else 0
+    if args.command == "audit":
+        decision_doc = _read_document(args.decision) if args.decision else None
+        findings = audit_codebase(args.target, decision_doc=decision_doc)
+        _out(render_findings(findings, args.format))
         return 1 if findings else 0
     document = _read_document(args.document)
     if document.get("schema") == SCHEMA_INTERVIEW:
         findings = validate_interview(document)
     else:
         findings = validate_decision(document)
-    print(render_findings(findings, args.format))
+    _out(render_findings(findings, args.format))
     return 1 if findings else 0
 
 
