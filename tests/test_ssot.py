@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -253,6 +254,73 @@ class CliTests(unittest.TestCase):
             )
         self.assertEqual(code, 1)
         self.assertIn("SSOT-STALE-001", buffer.getvalue())
+
+    def test_audit_cli_detects_config_and_couple_and_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "mod_a.py").write_text(
+                "import os\n"
+                "URL = os.getenv('APP_URL', 'http://localhost:8080')\n"
+                "def compute_score(items):\n"
+                "    total = 0\n"
+                "    for item in items:\n"
+                "        if item > 0:\n"
+                "            total += item * 2\n"
+                "    return total\n",
+                encoding="utf-8",
+            )
+            (root / "mod_b.py").write_text(
+                "import os\n"
+                "URL = os.getenv('APP_URL', 'http://localhost:9090')\n"
+                "def compute_score_copy(items):\n"
+                "    total = 0\n"
+                "    for item in items:\n"
+                "        if item > 0:\n"
+                "            total += item * 2\n"
+                "    return total\n",
+                encoding="utf-8",
+            )
+            tree_a = root / "vendor_a"
+            tree_b = root / "vendor_b"
+            tree_a.mkdir()
+            tree_b.mkdir()
+            (tree_a / "client.py").write_text("VERSION = '1.0'\n", encoding="utf-8")
+            (tree_b / "client.py").write_text("VERSION = '2.0'\n", encoding="utf-8")
+            decision_file = root / "decision.json"
+            decision_file.write_text(
+                json.dumps(
+                    {
+                        "decisions": [
+                            {
+                                "id": "vendor-client",
+                                "kind": "vendored_copy",
+                                "trees": ["vendor_a", "vendor_b"],
+                                "gate": {"kind": "parity_test"},
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            findings = ssot.audit_codebase(root, json.loads(decision_file.read_text(encoding="utf-8")))
+            codes = {f.code for f in findings}
+            self.assertIn("SSOT-CONFIG-001", codes)
+            self.assertIn("SSOT-COUPLE-001", codes)
+            self.assertIn("SSOT-STALE-001", codes)
+
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                exit_code = ssot.main(["audit", str(root), "--decision", str(decision_file), "--format", "json"])
+            self.assertEqual(exit_code, 1)
+            payload = json.loads(buffer.getvalue())
+            self.assertEqual(payload["status"], "failed")
+
+    def test_audit_cli_clean_repo_passes(self) -> None:
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            exit_code = ssot.main(["audit", str(ROOT / "src")])
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(buffer.getvalue().strip(), "ok")
 
 
 if __name__ == "__main__":
